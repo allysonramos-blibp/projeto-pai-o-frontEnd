@@ -28,8 +28,12 @@ const Login = () => {
     try {
       const result = await login(username, password);
 
-      if (result.success) {
-        navigate(from, { replace: true });
+      // A ALTERAÇÃO LÓGICA ESTÁ AQUI:
+      if (result && result.success) {
+        // O pequeno delay garante que o LocalStorage seja gravado antes de mudar a rota
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 150); 
       } else {
         setLocalError(result.error || "Usuário ou senha inválidos");
       }
@@ -41,7 +45,6 @@ const Login = () => {
     }
   };
 
-  // Mostra loading enquanto verifica autenticação
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col items-center justify-center backdrop-blur-sm bg-black/30">
@@ -104,7 +107,7 @@ const Login = () => {
             </div>
 
             {localError && (
-              <div className="error-message mt-4 text-red-600 flex items-center">
+              <div className="error-message mb-4 text-red-600 flex items-center gap-2">
                 <span>⚠️</span> {localError}
               </div>
             )}

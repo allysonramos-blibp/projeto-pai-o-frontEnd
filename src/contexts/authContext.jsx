@@ -2,74 +2,57 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { loginUser, getUserInfo } from '../services/auth';
 
 const AuthContext = createContext();
-
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
       
-      if (token) {
+      if (token && savedUser) {
         try {
-          const userData = await getUserInfo(token);
-          setUser(userData);
+          // Tenta validar o token, mas não deixa travar a tela se falhar
+          setUser(JSON.parse(savedUser));
         } catch (err) {
-          console.error('Token inválido:', err);
-          localStorage.removeItem('token');
-          setUser(null);
+          console.error("Erro ao ler usuário salvo");
+          localStorage.clear();
         }
       }
       
+      // GARANTIA: Libera a tela de "Acessando..." aconteça o que acontecer
       setLoading(false);
     };
-
     initAuth();
   }, []);
 
   const login = async (username, password) => {
-    setError(null);
-    setLoading(true);
-    
+    // Não mexemos no loading aqui para não travar a tela inteira, 
+    // apenas o botão de submit (isSubmitting) que já está no Login.jsx
     try {
       const { token, user: userData } = await loginUser(username, password);
-
+      
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(userData));
       
       setUser(userData);
-      
       return { success: true };
     } catch (err) {
-      setError(err.message);
-      return { 
-        success: false, 
-        error: err.message || 'Falha na autenticação' 
-      };
-    } finally {
-      setLoading(false);
+      const message = err.response?.data?.message || err.message || 'Erro ao entrar';
+      return { success: false, error: message };
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.clear();
     setUser(null);
   };
 
-  const value = {
-    user,
-    login,
-    logout,
-    loading,
-    error,
-    isAuthenticated: !!user
-  };
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
