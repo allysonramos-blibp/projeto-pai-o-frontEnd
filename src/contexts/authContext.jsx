@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
       
       if (token && savedUser) {
         try {
-          // Tenta validar o token, mas não deixa travar a tela se falhar
+          
           setUser(JSON.parse(savedUser));
         } catch (err) {
           console.error("Erro ao ler usuário salvo");
@@ -23,15 +23,14 @@ export const AuthProvider = ({ children }) => {
         }
       }
       
-      // GARANTIA: Libera a tela de "Acessando..." aconteça o que acontecer
+      
       setLoading(false);
     };
     initAuth();
   }, []);
 
   const login = async (username, password) => {
-    // Não mexemos no loading aqui para não travar a tela inteira, 
-    // apenas o botão de submit (isSubmitting) que já está no Login.jsx
+   
     try {
       const { token, user: userData } = await loginUser(username, password);
       

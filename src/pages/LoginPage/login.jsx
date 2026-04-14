@@ -28,9 +28,9 @@ const Login = () => {
     try {
       const result = await login(username, password);
 
-      // A ALTERAÇÃO LÓGICA ESTÁ AQUI:
+      
       if (result && result.success) {
-        // O pequeno delay garante que o LocalStorage seja gravado antes de mudar a rota
+        
         setTimeout(() => {
           navigate(from, { replace: true });
         }, 150); 
