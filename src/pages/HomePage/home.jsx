@@ -20,33 +20,38 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadDashboard = async () => {
-      try {
-        
-        const [resVendas, resComandas, resEstoque, resContas] = await Promise.all([
-          apiRequest('/vendas/total-hoje'), 
-          apiRequest('/comandas/abertas/count'),
-          apiRequest('/estoque/baixo/count'),
-          apiRequest('/contas-pagar/resumo') 
-        ]);
+  const loadDashboard = async () => {
+    try {
+      
+      const [resVendas, resComandas, resEstoque, resContas] = await Promise.all([
+        apiRequest('/api/vendas/total-hoje'), 
+        apiRequest('/api/comandas/abertas/count'),
+        apiRequest('/api/estoque/baixo/count'),
+        apiRequest('/api/contas/resumo') 
+      ]);
 
-        setStats({
-          vendas: resVendas.total || "R$ 0,00",
-          comandas: resComandas.quantidade || 0,
-          estoque: resEstoque.total || 0,
-          ticket: resVendas.ticketMedio || "R$ 0,00"
-        });
-        
-        setContasPagar(resContas || []);
-      } catch (err) {
-        console.error("Erro ao sincronizar dashboard:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      
+      setStats({
+        vendas: resVendas.total || "R$ 0,00",
+        comandas: resComandas.quantidade || 0,
+        estoque: resEstoque.total || 0,
+        ticket: resVendas.ticketMedio || "R$ 0,00"
+      });
+      
+  
+      
+      const listaContas = await apiRequest('/api/contas');
+      setContasPagar(listaContas.slice(0, 5)); 
 
-    loadDashboard();
-  }, []);
+    } catch (err) {
+      console.error("Erro ao sincronizar dashboard:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadDashboard();
+}, []);
 
   const cards = [
     { label: "Total Sales", value: stats.vendas, sub: "+8% que ontem", color: "bg-[#FFE2E5]", iconColor: "text-[#FA5A7D]", icon: TrendingUp },

@@ -4,6 +4,7 @@ import Login from './pages/LoginPage/login.jsx';
 import Home from './pages/HomePage/home.jsx';
 import Estoque from './pages/EstoquePage/Estoque.jsx'; 
 import Layout from './components/Layout.jsx'; 
+import ContasPagar from './pages/ContasPagarPage/ContasPagar';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -31,12 +32,14 @@ function App() {
           >
             <Route path="/home" element={<Home />} />
             <Route path="/estoque" element={<Estoque />} />
+            <Route path="/contas-pagar" element={<ContasPagar />} />
             
           </Route>
 
           
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
+          
         </Routes>
       </AuthProvider>
     </BrowserRouter>
