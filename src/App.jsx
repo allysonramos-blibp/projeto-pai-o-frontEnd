@@ -1,16 +1,17 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/authContext.jsx';
-import Login from './pages/LoginPage/login.jsx';
-import Home from './pages/HomePage/home.jsx';
-import Estoque from './pages/EstoquePage/Estoque.jsx'; 
-import Layout from './components/Layout.jsx'; 
-import ContasPagar from './pages/ContasPagarPage/ContasPagar';
-import Comandas from './pages/ComandasPage/Comandas';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/authContext.jsx";
+import Login from "./pages/LoginPage/login.jsx";
+import Home from "./pages/HomePage/home.jsx";
+import Produtos from "./pages/ProdutosPage/produtos.jsx";
+import Estoque from "./pages/EstoquePage/Estoque.jsx";
+import Layout from "./components/Layout.jsx";
+import ContasPagar from "./pages/ContasPagarPage/ContasPagar";
+import Comandas from "./pages/ComandasPage/Comandas";
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  const savedUser = localStorage.getItem('user');
-  if (loading) return null; 
+  const savedUser = localStorage.getItem("user");
+  if (loading) return null;
   if (user || savedUser) return children;
   return <Navigate to="/login" replace />;
 };
@@ -20,11 +21,9 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          
           <Route path="/login" element={<Login />} />
-          
-          
-          <Route 
+
+          <Route
             element={
               <PrivateRoute>
                 <Layout />
@@ -33,14 +32,13 @@ function App() {
           >
             <Route path="/home" element={<Home />} />
             <Route path="/estoque" element={<Estoque />} />
+            <Route path="/produtos" element={<Produtos />} />
             <Route path="/contas-pagar" element={<ContasPagar />} />
             <Route path="/comandas" element={<Comandas />} />
           </Route>
 
-          
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
-          
         </Routes>
       </AuthProvider>
     </BrowserRouter>
