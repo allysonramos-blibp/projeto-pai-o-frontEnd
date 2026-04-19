@@ -13,7 +13,7 @@ const Estoque = () => {
   const [itens, setItens] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [produtos, setProdutos] = useState([]);
+  const [prod, setProdutos] = useState([]);
 
   const [novoItem, setNovoItem] = useState({
     produtoId: "",
@@ -21,13 +21,18 @@ const Estoque = () => {
     minimo: "",
   });
 
+  const [novoProduto, setNovoProduto] = useState({
+    nome: "",
+    preco: "",
+  });
+
   const carregarEstoque = async () => {
     try {
       setLoading(true);
 
       const data = await apiRequest("/api/estoque");
-      const prod = await apiRequest("/api/produtos");
-      setProdutos(prod || []);
+      const prodData = await apiRequest("/api/produtos");
+      setProdutos(prodData || []);
       setItens(data || []);
     } catch (err) {
       console.error("Erro ao carregar estoque:", err);
@@ -59,6 +64,22 @@ const Estoque = () => {
       );
     }
   };
+
+  const indexarProdutos = new Map(prod.map((p) => [p.id, p]));
+
+  const mergeProdutoInfo = (item, produtos) => ({
+    id: produtos.id,
+    nome: produtos.nome,
+    preco: produtos.preco,
+    quantidade: item.quantidade,
+    minimo: item.minimo,
+    status: item.status,
+    dataUltimaMovimentacao: item.dataUltimaMovimentacao,
+  });
+
+  const resultado = prod
+  .filter(p => indexarProdutos.has(p.id))
+  .map(p => mergeProdutoInfo(p, indexarProdutos.get(p.id)));
 
   return (
     <div className="p-8 animate-fadeIn">
@@ -123,8 +144,8 @@ const Estoque = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="p-6 font-medium text-lg">
-                    
+                  <td className="p-6 text-lg font-bold text-[#151D48]">
+                    R$ {item.preco.toFixed(2)}
                   </td>
                   <td className="p-6">
                     {item.status === "BAIXO" || item.status === "CRITICO" ? (
