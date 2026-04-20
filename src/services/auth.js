@@ -76,13 +76,13 @@ export const apiRequest = async (endpoint, method = 'GET', body = null) => {
   try {
     const response = await fetch(`${API_URL}${endpoint}`, options);
 
-    // Se for 403 (Forbidden), não tentamos ler o JSON, apenas avisamos
+    
     if (response.status === 403) {
       console.warn(`Acesso negado (403) para o endpoint: ${endpoint}. Verifique as Roles do usuário.`);
-      return null; // Retorna null para o dashboard não travar
+      return null; 
     }
 
-    // Só tentamos transformar em JSON se a resposta não estiver vazia (status 204 No Content)
+    
     const data = response.status !== 204 ? await response.json() : null;
 
     if (!response.ok) {
@@ -92,6 +92,6 @@ export const apiRequest = async (endpoint, method = 'GET', body = null) => {
     return data;
   } catch (error) {
     console.error(`Erro na requisição ${endpoint}:`, error);
-    return null; // Retorna null para evitar que o Promise.all da Home quebre a tela toda
+    return null; 
   }
 };

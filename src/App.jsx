@@ -6,6 +6,7 @@ import Estoque from './pages/EstoquePage/Estoque.jsx';
 import Layout from './components/Layout.jsx'; 
 import ContasPagar from './pages/ContasPagarPage/ContasPagar';
 import Comandas from './pages/ComandasPage/Comandas';
+import Vendas from './pages/VendasPage/Vendas.jsx';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -35,6 +36,7 @@ function App() {
             <Route path="/estoque" element={<Estoque />} />
             <Route path="/contas-pagar" element={<ContasPagar />} />
             <Route path="/comandas" element={<Comandas />} />
+            <Route path="vendas" element={<Vendas />} />
           </Route>
 
           
