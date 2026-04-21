@@ -1,101 +1,97 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../../services/auth';
-import { Search, Plus, User, Hash, ShoppingBag } from 'lucide-react';
+import { Search, Plus, User, Hash } from 'lucide-react';
+import NovaComandaModal from "./components/NovaComandaModal";
+import DetalheComandaModal from "./components/DetalheComandaModal";
 
 const Comandas = () => {
   const [comandas, setComandas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtroMesa, setFiltroMesa] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedComanda, setSelectedComanda] = useState(null);
+
+  const STATUS_THEME = {
+    'ABERTA': { border: 'border-l-blue-500', badge: 'bg-blue-50 text-blue-600' },
+    'FINALIZADA': { border: 'border-l-teal-500', badge: 'bg-teal-50 text-teal-600' },
+    'CANCELADA': { border: 'border-l-red-500', badge: 'bg-red-50 text-red-600' }
+  };
 
   const carregarComandas = async () => {
     try {
       setLoading(true);
-      
       const data = await apiRequest('/api/comandas');
       setComandas(data || []);
     } catch (err) {
-      console.error("Erro ao buscar comandas:", err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    carregarComandas();
-  }, []);
+  useEffect(() => { carregarComandas(); }, []);
 
-  
   const comandasFiltradas = comandas.filter(c => 
-    c.numeroMesa.toString().includes(filtroMesa)
-  );
+    c.numeroMesa?.toString().includes(filtroMesa) || 
+    (c.nomeCliente && c.nomeCliente.toLowerCase().includes(filtroMesa.toLowerCase()))
+  ).sort((a, b) => b.id - a.id);
 
   return (
-    <div className="p-8 animate-fadeIn">
+    <div className="p-8 animate-fadeIn print:hidden">
       <header className="mb-8">
         <h2 className="text-3xl font-bold text-[#151D48]">Comandas</h2>
-        <p className="text-[#737791]">Gerencie as comandas do seu bar</p>
+        <p className="text-[#737791]">Gerencie o consumo das mesas em tempo real</p>
       </header>
 
-      
       <div className="relative mb-8">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4079ED]" size={20} />
         <input 
           type="text" 
-          placeholder="Buscar Mesa"
+          placeholder="Buscar mesa ou cliente..."
+          className="w-full pl-12 pr-4 py-4 bg-[#F0F3F9] rounded-full outline-none focus:ring-2 focus:ring-orange-500"
           value={filtroMesa}
           onChange={(e) => setFiltroMesa(e.target.value)}
-          className="w-full pl-12 pr-4 py-4 bg-[#F0F3F9] rounded-full border-none focus:ring-2 focus:ring-orange-500 outline-none text-[#737791]"
         />
       </div>
 
-      <h3 className="text-xl font-bold text-[#151D48] mb-6">
-        Comandas ({comandasFiltradas.length})
-      </h3>
-
-      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
-          <p className="text-gray-400">Carregando...</p>
+          <p className="text-gray-400">Carregando comandas...</p>
         ) : (
-          comandasFiltradas.map((comanda) => (
-            <div key={comanda.id} className="bg-white p-8 rounded-[30px] shadow-sm border border-gray-50 hover:shadow-md transition-all">
-              <div className="flex justify-between items-start mb-6">
-                <h4 className="text-lg font-bold text-[#151D48]">Comanda #{comanda.id.toString().padStart(3, '0')}</h4>
-                <span className={`text-sm font-medium ${comanda.status === 'ABERTA' ? 'text-[#4079ED]' : 'text-gray-400'}`}>
-                  {comanda.status.charAt(0) + comanda.status.slice(1).toLowerCase()}
-                </span>
-              </div>
-
-              <div className="space-y-4 mb-6">
-                <div className="flex items-center gap-2 text-[#151D48]">
-                  <User size={18} className="text-gray-400" />
-                  <span className="font-semibold">Cliente:</span>
-                  <span className="text-gray-600">{comanda.nomeCliente || `Mesa ${comanda.numeroMesa}`}</span>
-                </div>
-                
-                <div className="flex items-center gap-2 text-[#151D48]">
-                  <Hash size={18} className="text-gray-400" />
-                  <span className="font-semibold">Mesa:</span>
-                  <span className="text-gray-600">{comanda.numeroMesa}</span>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-gray-100 flex justify-center">
-                <p className="text-lg font-bold text-[#151D48]">
-                  Total: <span className="underline decoration-2 decoration-orange-400 underline-offset-4">
-                    R$ {comanda.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+          comandasFiltradas.map((comanda) => {
+            const tema = STATUS_THEME[comanda.status] || { border: 'border-l-gray-300', badge: 'bg-gray-100' };
+            return (
+              <div 
+                key={comanda.id} 
+                onClick={() => setSelectedComanda(comanda)}
+                className={`bg-white p-6 rounded-[30px] shadow-sm border-l-8 ${tema.border} hover:shadow-md transition-all cursor-pointer active:scale-95`}
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <h4 className="font-bold text-[#151D48]">Comanda #{comanda.id}</h4>
+                  <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase ${tema.badge}`}>
+                    {comanda.status}
                   </span>
-                </p>
+                </div>
+                <div className="space-y-2 mb-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-2"><User size={14}/> {comanda.nomeCliente || 'Consumidor'}</div>
+                  <div className="flex items-center gap-2"><Hash size={14}/> Mesa {comanda.numeroMesa}</div>
+                </div>
+                <div className="pt-3 border-t flex justify-between items-center">
+                  <span className="text-xs text-gray-400 font-semibold">TOTAL</span>
+                  <span className="font-bold text-[#151D48]">R$ {(comanda.valorTotal || 0).toFixed(2)}</span>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
-      
-      <button className="fixed bottom-10 right-10 bg-[#E67E22] text-white p-4 rounded-full shadow-xl hover:scale-110 transition-transform">
+      <button onClick={() => setShowAddModal(true)} className="fixed bottom-10 right-10 bg-[#E67E22] text-white p-4 rounded-full shadow-xl hover:scale-110 transition-all z-40">
         <Plus size={32} />
       </button>
+
+      {showAddModal && <NovaComandaModal onClose={() => setShowAddModal(false)} onSuccess={carregarComandas} />}
+      {selectedComanda && <DetalheComandaModal comanda={selectedComanda} onClose={() => setSelectedComanda(null)} refresh={carregarComandas} />}
     </div>
   );
 };
