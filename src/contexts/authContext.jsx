@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
           
           setUser(JSON.parse(savedUser));
         } catch (err) {
-          console.error("Erro ao ler usuário salvo");
+          console.error("Erro ao ler usuário salvo" + err);
           localStorage.clear();
         }
       }
