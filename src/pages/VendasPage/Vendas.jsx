@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../services/auth';
-import { Plus, Trash2, Receipt, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Trash2, Receipt, ShoppingBag, XCircle, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 const formatDate = (value) => {
   const date = value ? new Date(value) : null;
   if (!date || Number.isNaN(date.getTime())) return '-';
   return date.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
   });
 };
 
@@ -21,78 +18,102 @@ const Vendas = () => {
   const [vendas, setVendas] = useState([]);
   const [showFormModal, setShowFormModal] = useState(false);
   const [selectedVenda, setSelectedVenda] = useState(null);
+  const [expandido, setExpandido] = useState(false);
 
   const carregarHistorico = async () => {
-  try {
-    
-    const data = await apiRequest('/api/vendas?size=100'); 
-    
-    const ordenadas = data ? [...data].sort((a, b) => b.id - a.id) : [];
-    setVendas(ordenadas);
-  } catch (err) {
-    console.error("Erro ao buscar vendas:", err);
-  }
-};
+    try {
+      const data = await apiRequest('/api/vendas?size=100');
+      setVendas(data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  useEffect(() => {
-    carregarHistorico();
-  }, []);
+  useEffect(() => { carregarHistorico(); }, []);
+
+  const vendasExibidas = expandido ? vendas : vendas.slice(0, 4);
 
   return (
-    <div className="bg-transparent p-6">
+    <div className="p-8">
       <header className="mb-8">
         <h2 className="text-2xl font-bold text-[#151D48]">Vendas</h2>
         <p className="text-[#737791] text-sm">Registre e gerencie suas vendas</p>
       </header>
 
       <section>
-        <h3 className="text-lg font-bold text-[#151D48] mb-4">Histórico de Vendas</h3>
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-lg font-bold text-[#151D48]">Histórico de Vendas</h3>
+          {vendas.length > 4 && (
+            <button
+              onClick={() => setExpandido(!expandido)}
+              className="text-sm font-semibold text-[#E67E22] hover:text-[#d35400] flex items-center gap-1.5 transition-colors"
+            >
+              {expandido ? (
+                <><ChevronUp size={16} /> Ver menos</>
+              ) : (
+                <><ChevronDown size={16} /> Ver tudo ({vendas.length})</>
+              )}
+            </button>
+          )}
+        </div>
 
-        <div className="space-y-4">
-          {vendas.length === 0 ? (
-            <div className="bg-white rounded-2xl p-8 text-center text-[#718EBF] text-sm border border-gray-100">
-              Nenhuma venda encontrada.
-            </div>
-          ) : (
-            vendas.map((venda) => {
+        {vendas.length === 0 ? (
+          <div className="bg-white rounded-3xl p-10 text-center border border-gray-100 shadow-sm">
+            <Receipt size={40} className="mx-auto text-slate-300 mb-4" />
+            <p className="text-[#718EBF] text-sm font-medium">Nenhuma venda registrada ainda.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {vendasExibidas.map((venda) => {
               const status = venda.status || 'ABERTA';
-              let statusClasses = 'bg-orange-50 text-orange-500';
-              if (status === 'PAGA') statusClasses = 'bg-teal-50 text-teal-400';
-              if (status === 'CANCELADA') statusClasses = 'bg-red-50 text-red-400';
+              let statusBadge = 'bg-orange-50 text-orange-500 ring-orange-100';
+              if (status === 'PAGA') statusBadge = 'bg-teal-50 text-teal-500 ring-teal-100';
+              if (status === 'CANCELADA') statusBadge = 'bg-red-50 text-red-500 ring-red-100';
+
+              const categoriaPrimaria = venda.itens && venda.itens.length > 0 
+                ? venda.itens[0].produto.nomeCategoria || "Consumível"
+                : "Geral";
+
+              const nomeExibicao = venda.itens?.length > 1 
+                ? `${categoriaPrimaria} (+${venda.itens.length - 1} itens)` 
+                : categoriaPrimaria;
 
               return (
                 <div
                   key={venda.id}
                   onClick={() => setSelectedVenda(venda)}
-                  className="bg-white p-5 rounded-[20px] shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-all cursor-pointer active:scale-[0.98]"
+                  className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-100 cursor-pointer transition-all duration-300 group relative overflow-hidden"
                 >
-                  <div className="w-1/4">
-                    <p className="font-bold text-[#151D48]">Venda #{venda.id}</p>
-                    <p className="text-[#4FBDBA] text-xs font-medium">{venda.formasPagamento?.nome || '-'}</p>
-                  </div>
-
-                  <div className="w-1/4 text-[#737791] font-medium">
-                    {venda.usuario?.nome || '-'}
-                  </div>
-
-                  <div className="w-1/6 text-[#737791] text-center uppercase text-[10px] font-bold">
-                    {venda.formasPagamento?.tipo || '-'}
-                  </div>
-
-                  <div className="w-1/6 flex justify-center">
-                    <span className={`px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusClasses}`}>
+                  <div className="absolute inset-y-0 left-0 w-1 bg-orange-400 scale-y-0 group-hover:scale-y-100 transition-transform duration-300 rounded-r"></div>
+                  
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <div>
+                      <p className="font-bold text-[#151D48] text-base group-hover:text-[#E67E22] transition-colors uppercase truncate max-w-[200px]">
+                        {nomeExibicao}
+                      </p>
+                      <p className="text-[#737791] text-sm font-medium mt-0.5">
+                        {venda.formasPagamento?.nome || 'Não definida'}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-2 font-mono">
+                        🕒 {formatDate(venda.data_criacao)}
+                      </p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ring-1 ${statusBadge}`}>
                       {status}
                     </span>
                   </div>
 
-                  <div className="w-1/6 text-right font-black text-[#151D48] text-lg">
-                    {formatPrice(venda.valor_total)}
+                  <div className="flex items-center justify-between gap-2 pt-4 border-t border-gray-50">
+                    <span className="text-xs font-medium text-slate-500">Valor Total</span>
+                    <span className="text-xl font-extrabold text-teal-500">
+                      {formatPrice(venda.valor_total)}
+                    </span>
                   </div>
                 </div>
               );
-            })
-          )}
-        </div>
+            })}
+          </div>
+        )}
       </section>
 
       <div className="fixed right-6 bottom-6 z-50">
@@ -107,300 +128,179 @@ const Vendas = () => {
       {showFormModal && (
         <NovaVendaModal
           onClose={() => setShowFormModal(false)}
-          onSuccess={() => {
-            setShowFormModal(false);
-            carregarHistorico();
-          }}
+          onSuccess={() => { setShowFormModal(false); carregarHistorico(); }}
         />
       )}
 
       {selectedVenda && (
-        <VendaDetailModal 
-          venda={selectedVenda} 
-          onClose={() => setSelectedVenda(null)} 
-          refresh={carregarHistorico}
+        <VendaDetailModal
+          venda={selectedVenda}
+          onClose={() => setSelectedVenda(null)}
+          onUpdate={carregarHistorico}
         />
       )}
     </div>
   );
 };
 
-const VendaDetailModal = ({ venda, onClose, refresh }) => {
-  const status = venda.status || 'ABERTA';
-  let statusClasses = 'bg-orange-100 text-orange-600';
-  if (status === 'CANCELADA') statusClasses = 'bg-red-100 text-red-600';
-  if (status === 'PAGA') statusClasses = 'bg-teal-50 text-teal-500';
+const VendaDetailModal = ({ venda, onClose, onUpdate }) => {
+  const [formasPagamento, setFormasPagamento] = useState([]);
+  const [pagamentoId, setPagamentoId] = useState(venda.formasPagamento?.id || '');
+  const [loading, setLoading] = useState(false);
 
+  const status = venda.status || 'ABERTA';
+  const isPaga = status === 'PAGA';
+  const isAberta = status === 'ABERTA';
   const itens = venda.itens || [];
 
-  
-  const handleStatusUpdate = async (acao) => {
-  try {
-    let body = null;
+  useEffect(() => {
+    apiRequest('/api/formasdepagamento').then(setFormasPagamento).catch(console.error);
+  }, []);
 
-    if (acao === 'finalizar') {
-      
-      body = {
-        
-        formasPagamentosId: venda.formasPagamento?.id || venda.formasPagamentosId,
-        valor_total: venda.valor_total || 0,
-        statusVenda: "PAGA", 
-        itens: venda.itens?.map(item => ({
-          produtoId: item.produto?.id || item.produtoId,
-          quantidade: item.quantidade
-        })) || []
-      };
-    }
+  const handleTrocarPagamento = async (novoId) => {
+    setPagamentoId(novoId);
+    if (!novoId) return;
+    try {
+      await apiRequest(`/api/vendas/${venda.id}/pagamento`, 'PATCH', { formaPagamentosId: parseInt(novoId) });
+      onUpdate();
+    } catch (err) { console.error(err); }
+  };
 
-    
-    await apiRequest(`/api/vendas/${venda.id}/${acao}`, 'PATCH', body);
-
-    alert(`Venda ${acao === 'finalizar' ? 'finalizada' : 'cancelada'} com sucesso!`);
-    refresh();
-    onClose();
-  } catch (err) {
-    
-    if (err.message?.includes("Unexpected token") || err.message?.includes("Cancelamento")) {
-      refresh();
+  const handleFinalizar = async () => {
+    if (!pagamentoId) return alert('Selecione uma forma de pagamento.');
+    setLoading(true);
+    try {
+      await apiRequest(`/api/vendas/${venda.id}/finalizar`, 'PATCH', { formasPagamentosId: parseInt(pagamentoId) });
+      onUpdate();
       onClose();
-    } else {
-      console.error("Erro detalhado:", err);
-      alert("O servidor recusou a requisição (Erro 400). Verifique os nomes dos campos no Console.");
-    }
-  }
-};
+    } catch (err) { alert(err.message); } finally { setLoading(false); }
+  };
+
+  const handleCancelar = async () => {
+    if (!window.confirm('Deseja cancelar esta venda?')) return;
+    setLoading(true);
+    try {
+      await apiRequest(`/api/vendas/${venda.id}/cancelar`, 'PATCH');
+      onUpdate();
+      onClose();
+    } catch (err) { alert(err.message); } finally { setLoading(false); }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-[32px] w-full max-w-lg p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-        <button onClick={onClose} className="absolute top-6 right-6 text-[#718EBF] font-bold hover:text-red-500">X</button>
-
-        <h2 className="text-xl font-bold text-[#151D48] mb-6">Detalhes da Venda #{venda.id}</h2>
-
-        <div className="space-y-3 text-sm mb-8 bg-slate-50 p-5 rounded-2xl">
-          <p><span className="text-[#737791]">Vendedor:</span> <span className="font-bold text-[#151D48]">{venda.usuario?.nome || '-'}</span></p>
-          <p>
-            <span className="text-[#737791]">Status: </span>
-            <span className={`px-3 py-0.5 rounded-full text-[10px] font-bold uppercase ${statusClasses}`}>{status}</span>
-          </p>
-          <p><span className="text-[#737791]">Data:</span> <span className="font-medium">{formatDate(venda.data_criacao || venda.dataVenda)}</span></p>
-        </div>
-
-        <div className="mb-8">
-          <p className="font-bold text-[#151D48] mb-4 flex items-center gap-2 uppercase text-xs tracking-widest">
-            <Receipt size={16} className="text-[#E67E22]" /> Itens do Pedido
-          </p>
-          <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-            {itens.length === 0 ? (
-              <p className="text-xs text-gray-400 italic py-4 text-center">Nenhum produto vinculado.</p>
+      <div className="bg-[#F4F6FA] rounded-[28px] w-full max-w-md shadow-2xl relative overflow-hidden">
+        <button onClick={onClose} className="absolute top-5 right-5 text-[#151D48] font-bold text-lg hover:text-red-400">✕</button>
+        <div className="p-7">
+          <h2 className="text-xl font-bold text-[#151D48] mb-5">Venda #{venda.id}</h2>
+          <div className="bg-white rounded-2xl p-4 mb-5 space-y-2 text-sm">
+            <p><span className="text-[#737791]">Vendedor: </span><span className="font-bold text-[#151D48]">{venda.usuario?.nome || '-'}</span></p>
+            <p className="flex items-center gap-2">
+              <span className="text-[#737791]">Status:</span>
+              <span className={`px-3 py-0.5 rounded-full text-xs font-bold ${isAberta ? 'bg-orange-100 text-orange-500' : isPaga ? 'bg-teal-50 text-teal-500' : 'bg-red-100 text-red-500'}`}>{status}</span>
+            </p>
+            {isAberta ? (
+              <div className="pt-1">
+                <p className="text-[#737791] mb-1">Forma de Pagamento:</p>
+                <select className="w-full p-2.5 bg-slate-50 rounded-xl border border-gray-100 text-sm text-[#151D48] font-medium" value={pagamentoId} onChange={(e) => handleTrocarPagamento(e.target.value)}>
+                  <option value="">Selecionar...</option>
+                  {formasPagamento.map((f) => <option key={f.id} value={f.id}>{f.nome}</option>)}
+                </select>
+              </div>
             ) : (
-              itens.map((item, index) => (
-                <div key={index} className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-[#151D48]">{item.produto?.nome || item.produtoNome || 'Produto'}</span>
-                    <span className="text-[10px] text-gray-400 uppercase">{item.quantidade} unidade(s)</span>
-                  </div>
-                  <span className="font-bold text-teal-500">{formatPrice(item.precoTotal || item.sub_total)}</span>
-                </div>
-              ))
+              <p><span className="text-[#737791]">Pagamento: </span><span className="font-medium text-[#151D48]">{venda.formasPagamento?.nome || '-'}</span></p>
             )}
           </div>
-        </div>
-
-        <div className="bg-[#151D48] p-7 rounded-[28px] flex justify-between items-center text-white mb-8 shadow-xl shadow-blue-50">
-          <span className="opacity-50 text-[10px] uppercase font-bold tracking-widest">Valor Total</span>
-          <span className="text-3xl font-black text-[#16DBCC]">{formatPrice(venda.valor_total)}</span>
-        </div>
-
-        {status === 'ABERTA' && (
-          <div className="flex gap-4">
-            <button 
-              onClick={() => handleStatusUpdate('cancelar')}
-              className="flex-1 bg-red-50 text-red-600 font-bold py-4 rounded-2xl border border-red-100 hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
-            >
-              <XCircle size={18} /> CANCELAR
-            </button>
-            <button 
-              onClick={() => handleStatusUpdate('finalizar')}
-              className="flex-1 bg-teal-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-teal-100 hover:bg-teal-600 transition-all flex items-center justify-center gap-2"
-            >
-              <CheckCircle size={18} /> FINALIZAR
-            </button>
+          <div className="mb-5">
+            <p className="flex items-center gap-2 text-xs font-bold text-[#E67E22] uppercase mb-3"><ShoppingBag size={14} /> Itens</p>
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {itens.map((item, index) => (
+                <div key={index} className="bg-white rounded-xl px-4 py-3 flex justify-between items-center">
+                  <div><p className="font-semibold text-[#151D48] text-sm">{item.produto?.nome}</p><p className="text-xs text-[#737791]">{item.quantidade} UN</p></div>
+                  <p className="font-bold text-teal-500 text-sm">{formatPrice(item.precoTotal)}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        )}
+          <div className="bg-[#151D48] rounded-2xl px-6 py-4 flex justify-between items-center mb-6">
+            <span className="text-xs font-bold text-slate-400 uppercase">Total</span>
+            <span className="text-2xl font-bold text-teal-400">{formatPrice(venda.valor_total)}</span>
+          </div>
+          {isAberta && (
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={handleCancelar} disabled={loading} className="bg-red-50 text-red-500 font-bold p-4 rounded-2xl disabled:opacity-50">CANCELAR</button>
+              <button onClick={handleFinalizar} disabled={loading || !pagamentoId} className="bg-teal-500 text-white font-bold p-4 rounded-2xl disabled:opacity-50">FINALIZAR</button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-
 const NovaVendaModal = ({ onClose, onSuccess }) => {
   const [produtos, setProdutos] = useState([]);
   const [formasPagamento, setFormasPagamento] = useState([]);
   const [carrinho, setCarrinho] = useState([]);
-  const [produtoSelecionado, setProdutoSelecionado] = useState('');
-  const [quantidade, setQuantidade] = useState(1);
-  const [formaPagamentoSelecionada, setFormaPagamentoSelecionada] = useState('');
+  const [pagamentoId, setPagamentoId] = useState('');
+  const [itemAtual, setItemAtual] = useState({ produtoId: '', quantidade: 1, precoUnitario: 0, nome: '' });
 
   useEffect(() => {
-    const carregarDados = async () => {
-      try {
-        const [resProd, resPgto] = await Promise.all([
-          apiRequest('/api/produtos'),
-          apiRequest('/api/formasdepagamento')
-        ]);
-        setProdutos(resProd || []);
-        setFormasPagamento(resPgto || []);
-      } catch (err) { console.error("Erro ao carregar dados do modal:", err); }
-    };
-    carregarDados();
+    Promise.all([apiRequest('/api/produtos'), apiRequest('/api/formasdepagamento')])
+      .then(([p, f]) => { setProdutos(p || []); setFormasPagamento(f || []); })
+      .catch(console.error);
   }, []);
 
-  const adicionarAoCarrinho = () => {
-    if (!produtoSelecionado || quantidade <= 0) return;
-    
-    const prod = produtos.find(p => p.id === parseInt(produtoSelecionado));
-    if (!prod) return;
-
-    const itemExistenteIndex = carrinho.findIndex(item => item.produtoId === prod.id);
-
-    if (itemExistenteIndex > -1) {
-      
-      const novoCarrinho = [...carrinho];
-      novoCarrinho[itemExistenteIndex].quantidade += parseInt(quantidade);
-      novoCarrinho[itemExistenteIndex].total = novoCarrinho[itemExistenteIndex].quantidade * prod.preco;
-      setCarrinho(novoCarrinho);
-    } else {
-      
-      setCarrinho([...carrinho, { 
-        produtoId: prod.id, 
-        nome: prod.nome, 
-        preco: prod.preco, 
-        quantidade: parseInt(quantidade),
-        total: prod.preco * quantidade 
-      }]);
-    }
-
-   
-    setProdutoSelecionado('');
-    setQuantidade(1);
+  const finalizarVenda = async () => {
+    const body = {
+      formasPagamentosId: parseInt(pagamentoId),
+      itens: carrinho.map(i => ({ produtoId: parseInt(i.produtoId), quantidade: parseInt(i.quantidade), precoUnitario: i.precoUnitario })),
+    };
+    try { await apiRequest('/api/vendas', 'POST', body); onSuccess(); } catch (err) { alert(err.message); }
   };
-
-  const removerDoCarrinho = (index) => {
-    setCarrinho(carrinho.filter((_, i) => i !== index));
-  };
-
-  const totalGeral = carrinho.reduce((acc, item) => acc + item.total, 0);
-
-  const salvarVenda = async () => {
-  if (carrinho.length === 0) return alert("Carrinho vazio");
-  
-  const total = carrinho.reduce((acc, item) => acc + item.total, 0);
-
-  const payload = {
-    formasPagamentosId: parseInt(formaPagamentoSelecionada),
-    valor_total: total,
-    statusVenda: "ABERTA", 
-    itens: carrinho.map(i => ({ produtoId: i.produtoId, quantidade: i.quantidade }))
-  };
-
-  try {
-    await apiRequest('/api/vendas', 'POST', payload);
-    onSuccess(); 
-  } catch (err) { 
-    alert("Erro ao salvar. Verifique se o status 'ABERTA' existe no Java."); 
-  }
-};
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
-      <div className="bg-white rounded-[32px] w-full max-w-2xl p-8 max-h-[90vh] flex flex-col shadow-2xl">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-[#151D48]">Nova Venda</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-red-500 font-bold">FECHAR</button>
-        </div>
-        
-        <div className="flex gap-4 mb-6 bg-slate-50 p-4 rounded-2xl">
-          <div className="flex-1">
-            <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Produto</label>
-            <select 
-              className="w-full p-3 bg-white border-none ring-1 ring-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500"
-              value={produtoSelecionado} 
-              onChange={e => setProdutoSelecionado(e.target.value)}
-            >
-              <option value="">Selecione...</option>
-              {produtos.map(p => <option key={p.id} value={p.id}>{p.nome} - {formatPrice(p.preco)}</option>)}
-            </select>
-          </div>
-          <div className="w-24">
-            <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Qtd</label>
-            <input 
-              type="number" 
-              className="w-full p-3 bg-white border-none ring-1 ring-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-500" 
-              value={quantidade} 
-              onChange={e => setQuantidade(e.target.value)} 
-            />
-          </div>
-          <button 
-            onClick={adicionarAoCarrinho} 
-            className="self-end bg-orange-500 text-white p-3 rounded-xl hover:bg-orange-600 transition-all shadow-lg shadow-orange-100"
-          >
-            <Plus size={24} />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto mb-6">
-          <p className="text-xs font-bold text-gray-400 uppercase mb-3">Itens Selecionados</p>
-          {carrinho.length === 0 ? (
-            <p className="text-center py-8 text-gray-400 text-sm italic">Carrinho vazio...</p>
-          ) : (
-            <div className="space-y-2">
-              {carrinho.map((item, i) => (
-                <div key={i} className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <div>
-                    <p className="font-bold text-[#151D48] text-sm">{item.nome}</p>
-                    <p className="text-[10px] text-gray-400">{item.quantidade}x {formatPrice(item.preco)}</p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="font-bold text-teal-600">{formatPrice(item.total)}</span>
-                    <button onClick={() => removerDoCarrinho(i)} className="text-red-400 hover:text-red-600">
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="pt-6 border-t border-gray-100">
-          <div className="flex justify-between items-end mb-6">
-            <div className="w-1/2">
-              <label className="text-[10px] font-bold text-gray-400 uppercase ml-1">Pagamento</label>
-              <select 
-                className="w-full p-3 bg-slate-50 border-none ring-1 ring-gray-100 rounded-xl"
-                value={formaPagamentoSelecionada}
-                onChange={e => setFormaPagamentoSelecionada(e.target.value)}
-              >
-                <option value="">Selecione...</option>
-                {formasPagamento.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+      <div className="bg-white p-8 rounded-[28px] w-full max-w-5xl h-[90vh] overflow-y-auto relative">
+        <button onClick={onClose} className="absolute top-6 right-6 text-gray-400 font-bold text-lg">✕</button>
+        <h2 className="text-2xl font-bold text-[#151D48] mb-8 flex items-center gap-3"><Receipt className="text-[#E67E22]" /> Registrar Venda</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 bg-slate-50 p-6 rounded-2xl">
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <select className="p-3 bg-white rounded-xl border border-gray-200 text-sm" value={itemAtual.produtoId} onChange={e => {
+                const p = produtos.find(x => x.id === parseInt(e.target.value));
+                setItemAtual({...itemAtual, produtoId: e.target.value, precoUnitario: p?.preco || 0, nome: p?.nome || ''});
+              }}>
+                <option value="">Produto</option>
+                {produtos.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
               </select>
+              <input type="number" min="1" className="p-3 bg-white rounded-xl border border-gray-200 text-sm" value={itemAtual.quantidade} onChange={e => setItemAtual({...itemAtual, quantidade: parseInt(e.target.value) || 1})} />
             </div>
-            <div className="text-right">
-              <p className="text-[10px] font-bold text-gray-400 uppercase">Total Geral</p>
-              <p className="text-3xl font-black text-[#151D48]">{formatPrice(totalGeral)}</p>
+            <button onClick={() => { if(itemAtual.produtoId) setCarrinho([...carrinho, {...itemAtual, precoTotal: itemAtual.precoUnitario * itemAtual.quantidade}]); setItemAtual({produtoId: '', quantidade: 1, precoUnitario: 0, nome: ''}) }} className="w-full bg-[#E67E22] text-white p-3 rounded-xl font-semibold mb-6">Adicionar</button>
+            <div className="bg-white rounded-xl overflow-hidden">
+              <table className="w-full text-sm text-left">
+                <tbody>
+                  {carrinho.map((item, idx) => (
+                    <tr key={idx} className="border-b border-gray-50">
+                      <td className="p-4 font-semibold">{item.nome}</td>
+                      <td className="p-4">{item.quantidade}x</td>
+                      <td className="p-4 font-bold text-teal-500">R$ {item.precoTotal.toFixed(2)}</td>
+                      <td className="p-4 text-right"><button onClick={() => setCarrinho(carrinho.filter((_, i) => i !== idx))} className="text-red-300 hover:text-red-500"><Trash2 size={16} /></button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-
-          <div className="flex gap-4">
-            <button onClick={onClose} className="flex-1 py-4 text-[#737791] font-bold hover:bg-gray-50 rounded-2xl transition-all">CANCELAR</button>
-            <button 
-              onClick={salvarVenda} 
-              disabled={carrinho.length === 0}
-              className="flex-1 py-4 bg-[#151D48] text-white rounded-[20px] font-bold shadow-xl shadow-blue-100 hover:bg-[#0a0f29] transition-all disabled:opacity-50"
-            >
-              FINALIZAR VENDA
-            </button>
+          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <h3 className="text-base font-bold mb-5">Finalização</h3>
+            <select className="w-full p-3 bg-slate-50 rounded-xl border border-gray-100 mb-5" value={pagamentoId} onChange={e => setPagamentoId(e.target.value)}>
+              <option value="">Pagamento</option>
+              {formasPagamento.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
+            </select>
+            <div className="p-4 bg-orange-50 rounded-xl mb-6">
+              <p className="text-2xl font-bold text-[#E67E22]">R$ {carrinho.reduce((a, b) => a + b.precoTotal, 0).toFixed(2)}</p>
+            </div>
+            <button onClick={finalizarVenda} disabled={carrinho.length === 0 || !pagamentoId} className="w-full bg-[#151D48] text-white p-4 rounded-xl font-bold disabled:opacity-40">Finalizar</button>
           </div>
         </div>
       </div>

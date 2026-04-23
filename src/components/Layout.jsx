@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/authContext';
 import { 
   LayoutDashboard, BarChart3, ShoppingCart, 
+  Package, LogOut, Receipt, Wallet, Truck, ShoppingBag 
   Package, ClipboardList, TrendingUp,Beer,
   Users, LogOut, Receipt, Wallet, Truck, ShoppingBag 
 } from 'lucide-react';
@@ -27,7 +28,8 @@ const menuItems = [
   return (
     <div className="flex min-h-screen bg-[#F8F9FC]">
       
-      <aside className="w-64 bg-white border-r border-gray-100 flex flex-col p-6 fixed h-full">
+      
+      <aside className="w-64 bg-white border-r border-gray-100 flex flex-col p-6 fixed h-full print:hidden">
         <div className="flex items-center gap-3 mb-10 px-2">
           <div className="bg-[#E67E22] p-2 rounded-xl">
             <span className="text-white font-bold">ÓP</span>
@@ -62,7 +64,7 @@ const menuItems = [
       </aside>
 
       
-      <main className="flex-1 ml-64">
+      <main className="flex-1 ml-64 print:ml-0 print:w-full print:p-0">
         <Outlet />
       </main>
     </div>
