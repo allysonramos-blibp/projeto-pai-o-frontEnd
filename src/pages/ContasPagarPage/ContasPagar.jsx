@@ -94,7 +94,6 @@ const ContasPagar = () => {
         <p className="text-[#737791]">Gerencie suas contas a pagar</p>
       </header>
 
-      {/* Banner de alerta de contas vencidas */}
       {contasVencidas.length > 0 && (
         <div className="bg-red-50 border border-red-200 rounded-[24px] p-4 mb-6 flex items-center gap-3">
           <AlertTriangle size={20} className="text-red-500 shrink-0" />
@@ -107,7 +106,6 @@ const ContasPagar = () => {
         </div>
       )}
 
-      {/* Cards de resumo */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         <div className="bg-white p-8 rounded-[30px] shadow-sm border border-gray-50 text-center">
           <p className="text-[#4079ED] text-sm font-medium mb-2">Total Pendente</p>
@@ -129,7 +127,6 @@ const ContasPagar = () => {
         </div>
       </div>
 
-      {/* Busca */}
       <div className="relative mb-8">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4079ED]" size={20} />
         <input
@@ -141,7 +138,6 @@ const ContasPagar = () => {
         />
       </div>
 
-      {/* Lista de contas */}
       <div className="space-y-4">
         {loading ? (
           <p className="text-center text-gray-400">Carregando contas...</p>
