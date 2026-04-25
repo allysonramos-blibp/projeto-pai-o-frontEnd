@@ -145,7 +145,7 @@ const Estoque = () => {
                     </div>
                   </td>
                   <td className="p-6 text-lg font-bold text-[#151D48]">
-                    R$ {item.preco.toFixed(2)}
+                    R$ {item.preco?.toFixed(2)}
                   </td>
                   <td className="p-6">
                     {item.status === "BAIXO" || item.status === "CRITICO" ? (
