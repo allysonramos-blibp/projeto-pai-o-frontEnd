@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/auth';
-import { X, Plus, CheckCircle, XCircle, Trash2, Printer, Loader2, Banknote, CreditCard, Smartphone, Wallet } from 'lucide-react';
+import { useAuth } from '../../../contexts/authContext';
+import { X, Plus, CheckCircle, XCircle, Trash2, Printer, Loader2, Banknote, CreditCard, Smartphone, Wallet, Clock } from 'lucide-react';
 
 const ICONE_POR_TIPO = {
   DINHEIRO: Banknote,
@@ -9,9 +10,8 @@ const ICONE_POR_TIPO = {
 };
 
 const ICONE_POR_NOME = {
-  'debito':  Wallet,
-  'debito':  Wallet,
-  'debit':   Wallet,
+  'debito': Wallet,
+  'debit':  Wallet,
 };
 
 const getIcone = (forma) => {
@@ -25,6 +25,7 @@ const getIcone = (forma) => {
 const ModalPagamento = ({ total, onConfirmar, onFechar }) => {
   const [formas, setFormas] = useState([]);
   const [formaSelecionada, setFormaSelecionada] = useState(null);
+  const [pagarDepois, setPagarDepois] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,10 +35,19 @@ const ModalPagamento = ({ total, onConfirmar, onFechar }) => {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleConfirmar = () => {
+    if (pagarDepois) {
+      onConfirmar({ pagarDepois: true, formaPagamentoId: null });
+    } else if (formaSelecionada) {
+      onConfirmar({ pagarDepois: false, formaPagamentoId: formaSelecionada });
+    }
+  };
+
+  const podeConfirmar = pagarDepois || formaSelecionada !== null;
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
       <div className="bg-white rounded-[32px] w-full max-w-sm p-8 shadow-2xl">
-
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-bold text-[#151D48]">Forma de Pagamento</h3>
           <button onClick={onFechar} className="text-gray-400 hover:text-red-500">
@@ -50,39 +60,52 @@ const ModalPagamento = ({ total, onConfirmar, onFechar }) => {
           <span className="text-2xl font-black text-teal-400">R$ {total.toFixed(2)}</span>
         </div>
 
+        <button
+          onClick={() => { setPagarDepois(!pagarDepois); setFormaSelecionada(null); }}
+          className={`w-full flex items-center gap-3 p-4 rounded-2xl ring-2 transition-all font-bold text-sm mb-4
+            ${pagarDepois
+              ? 'bg-orange-50 text-orange-500 ring-orange-200 ring-offset-2'
+              : 'bg-gray-50 text-gray-400 ring-gray-100 hover:ring-gray-200'
+            }`}
+        >
+          <Clock size={20} />
+          Pagar Depois
+          <span className="ml-auto text-xs font-normal opacity-60">Gera conta a receber</span>
+        </button>
+
         {loading ? (
-          <div className="flex justify-center items-center py-8 text-gray-400">
+          <div className="flex justify-center items-center py-6 text-gray-400">
             <Loader2 size={24} className="animate-spin" />
           </div>
-        ) : formas.length === 0 ? (
-          <p className="text-center text-gray-400 text-sm py-6">
-            Nenhuma forma de pagamento ativa cadastrada.
-          </p>
         ) : (
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            {formas.map((forma) => (
-              <button
-                key={forma.id}
-                onClick={() => setFormaSelecionada(forma.id)}
-                className={`flex flex-col items-center gap-2 p-4 rounded-2xl ring-2 transition-all font-bold text-sm text-center
-                  ${formaSelecionada === forma.id
-                    ? 'bg-teal-50 text-teal-600 ring-teal-200 ring-offset-2 scale-95'
-                    : 'bg-gray-50 text-gray-400 ring-gray-100 hover:ring-gray-200'
-                  }`}
-              >
-                {(() => { const Icone = getIcone(forma); return <Icone size={22} />; })()}
-                {forma.nome}
-              </button>
-            ))}
+          <div className={`grid grid-cols-2 gap-3 mb-6 transition-opacity ${pagarDepois ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+            {formas.map((forma) => {
+              const Icone = getIcone(forma);
+              return (
+                <button
+                  key={forma.id}
+                  onClick={() => setFormaSelecionada(forma.id)}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl ring-2 transition-all font-bold text-sm text-center
+                    ${formaSelecionada === forma.id
+                      ? 'bg-teal-50 text-teal-600 ring-teal-200 ring-offset-2 scale-95'
+                      : 'bg-gray-50 text-gray-400 ring-gray-100 hover:ring-gray-200'
+                    }`}
+                >
+                  <Icone size={22} />
+                  {forma.nome}
+                </button>
+              );
+            })}
           </div>
         )}
 
         <button
-          onClick={() => formaSelecionada && onConfirmar(formaSelecionada)}
-          disabled={!formaSelecionada}
+          onClick={handleConfirmar}
+          disabled={!podeConfirmar}
           className="w-full py-4 bg-teal-500 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-teal-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
         >
-          <CheckCircle size={18} /> CONFIRMAR PAGAMENTO
+          <CheckCircle size={18} />
+          {pagarDepois ? 'CONFIRMAR — PAGAR DEPOIS' : 'CONFIRMAR PAGAMENTO'}
         </button>
       </div>
     </div>
@@ -90,6 +113,7 @@ const ModalPagamento = ({ total, onConfirmar, onFechar }) => {
 };
 
 const DetalheComandaModal = ({ comanda, onClose, refresh }) => {
+  const { user } = useAuth();
   const [produtos, setProdutos] = useState([]);
   const [itemSelecionado, setItemSelecionado] = useState('');
   const [quantidade, setQuantidade] = useState(1);
@@ -147,16 +171,31 @@ const DetalheComandaModal = ({ comanda, onClose, refresh }) => {
     }
   };
 
-  const handleFinalizar = async (formaPagamentoId) => {
-    try {
-      await apiRequest(`/api/comandas/${comanda.id}/finalizar`, 'PATCH', { formaPagamentoId });
-      await refresh();
-      onClose();
-    } catch (err) {
-      console.error("Erro ao finalizar comanda:", err);
-      alert(`Erro ao finalizar comanda: ${err?.message || 'Verifique o console'}`);
-    }
-  };
+  const handleFinalizar = async ({ pagarDepois, formaPagamentoId }) => {
+  
+  if (!user?.id) {
+    alert("Erro: Usuário não identificado. Tente fazer login novamente.");
+    return;
+  }
+
+  if (!comanda?.id) {
+    alert("Erro: Comanda não identificada.");
+    return;
+  }
+
+  try {
+    await apiRequest(`/api/comandas/${comanda.id}/finalizar`, 'PATCH', {
+      formaPagamentoId,
+      pagarDepois,
+      usuarioId: user.id,
+    });
+    await refresh();
+    onClose();
+  } catch (err) {
+    console.error("Erro ao finalizar comanda:", err);
+    alert(`Erro ao finalizar comanda: ${err?.message || 'Verifique o console'}`);
+  }
+};
 
   const handlePrint = () => {
     const itensHtml = (comandaLocal.itens || []).map(item => `

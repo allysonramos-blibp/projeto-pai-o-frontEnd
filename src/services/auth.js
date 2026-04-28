@@ -4,9 +4,7 @@ export const loginUser = async (username, password) => {
   try {
     const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         login: username,  
         senha: password 
@@ -16,12 +14,11 @@ export const loginUser = async (username, password) => {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || data.error || 'Erro ao fazer login');
+      throw new Error(data.message || 'Erro ao fazer login');
     }
-    return {
-      token: data.token || data.accessToken,
-      user: data.user || data.usuario
-    };
+
+    
+    return data; 
   } catch (error) {
     console.error('Erro no login:', error);
     throw error;
