@@ -9,6 +9,7 @@ import Comandas from './pages/ComandasPage/Comandas';
 import Vendas from './pages/VendasPage/Vendas.jsx';
 import Fornecedores from './pages/FornecedoresPage/Fornecedores.jsx';
 import ContasReceber from './pages/ContasReceberPage/ContasReceber.jsx';
+import Relatorios from './pages/RelatoriosPage/Relatorios.jsx';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -41,6 +42,7 @@ function App() {
             <Route path="vendas" element={<Vendas />} />
             <Route path="fornecedores" element={<Fornecedores />} />
             <Route path="contas-receber" element={<ContasReceber />} />
+            <Route path="relatorios" element={<Relatorios />} />
           </Route>
 
           

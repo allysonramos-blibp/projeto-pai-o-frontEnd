@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/auth';
 import { useAuth } from '../../../contexts/authContext';
-import { X, Plus, CheckCircle, XCircle, Trash2, Printer, Loader2, Banknote, CreditCard, Smartphone, Wallet, Clock } from 'lucide-react';
+import { X, Plus, CheckCircle, XCircle, Trash2, Printer, Loader2, Banknote, CreditCard, Smartphone, Wallet, Clock, Calendar, User } from 'lucide-react';
 
 const ICONE_POR_TIPO = {
   DINHEIRO: Banknote,
@@ -20,6 +20,15 @@ const getIcone = (forma) => {
   );
   if (porNome) return porNome[1];
   return ICONE_POR_TIPO[forma.tipo] || CreditCard;
+};
+
+const formatarData = (dataStr) => {
+  if (!dataStr) return null;
+  const d = new Date(dataStr);
+  return d.toLocaleString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
 };
 
 const ModalPagamento = ({ total, onConfirmar, onFechar }) => {
@@ -172,30 +181,19 @@ const DetalheComandaModal = ({ comanda, onClose, refresh }) => {
   };
 
   const handleFinalizar = async ({ pagarDepois, formaPagamentoId }) => {
-  
-  if (!user?.id) {
-    alert("Erro: Usuário não identificado. Tente fazer login novamente.");
-    return;
-  }
-
-  if (!comanda?.id) {
-    alert("Erro: Comanda não identificada.");
-    return;
-  }
-
-  try {
-    await apiRequest(`/api/comandas/${comanda.id}/finalizar`, 'PATCH', {
-      formaPagamentoId,
-      pagarDepois,
-      usuarioId: user.id,
-    });
-    await refresh();
-    onClose();
-  } catch (err) {
-    console.error("Erro ao finalizar comanda:", err);
-    alert(`Erro ao finalizar comanda: ${err?.message || 'Verifique o console'}`);
-  }
-};
+    try {
+      await apiRequest(`/api/comandas/${comanda.id}/finalizar`, 'PATCH', {
+        formaPagamentoId,
+        pagarDepois,
+        usuarioId: user.id,
+      });
+      await refresh();
+      onClose();
+    } catch (err) {
+      console.error("Erro ao finalizar comanda:", err);
+      alert(`Erro ao finalizar comanda: ${err?.message || 'Verifique o console'}`);
+    }
+  };
 
   const handlePrint = () => {
     const itensHtml = (comandaLocal.itens || []).map(item => `
@@ -213,7 +211,7 @@ const DetalheComandaModal = ({ comanda, onClose, refresh }) => {
           <style>
             body { font-family: monospace; padding: 24px; max-width: 400px; margin: 0 auto; }
             h2 { text-align: center; margin-bottom: 4px; font-size: 20px; }
-            p.sub { text-align: center; color: #666; font-size: 12px; margin-bottom: 16px; }
+            p.sub { text-align: center; color: #666; font-size: 12px; margin-bottom: 4px; }
             table { width: 100%; border-collapse: collapse; }
             thead tr { border-bottom: 2px dashed #ccc; }
             th { padding: 6px 0; font-size: 11px; color: #999; text-transform: uppercase; }
@@ -223,7 +221,10 @@ const DetalheComandaModal = ({ comanda, onClose, refresh }) => {
         </head>
         <body>
           <h2>Mesa ${comandaLocal.numeroMesa}</h2>
+          <p class="sub">Cliente: ${comandaLocal.nomeCliente || 'Consumidor'}</p>
+          ${comandaLocal.dataAbertura ? `<p class="sub">Abertura: ${formatarData(comandaLocal.dataAbertura)}</p>` : ''}
           <p class="sub">Status: ${comandaLocal.status}</p>
+          <br/>
           <table>
             <thead>
               <tr>
@@ -246,16 +247,13 @@ const DetalheComandaModal = ({ comanda, onClose, refresh }) => {
 
     const anterior = document.getElementById('iframe-impressao');
     if (anterior) anterior.remove();
-
     const iframe = document.createElement('iframe');
     iframe.id = 'iframe-impressao';
     iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;';
     document.body.appendChild(iframe);
-
     iframe.contentDocument.open();
     iframe.contentDocument.write(html);
     iframe.contentDocument.close();
-
     iframe.onload = () => {
       iframe.contentWindow.focus();
       iframe.contentWindow.print();
@@ -270,14 +268,30 @@ const DetalheComandaModal = ({ comanda, onClose, refresh }) => {
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-[32px] w-full max-w-lg p-8 shadow-2xl flex flex-col max-h-[90vh]">
 
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-bold text-[#151D48]">Mesa {comandaLocal.numeroMesa}</h2>
-              <button onClick={handlePrint} className="p-2 text-gray-400 hover:text-blue-500">
-                <Printer size={20} />
-              </button>
+          {/* Header */}
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-bold text-[#151D48]">Mesa {comandaLocal.numeroMesa}</h2>
+                <button onClick={handlePrint} className="p-2 text-gray-400 hover:text-blue-500">
+                  <Printer size={20} />
+                </button>
+              </div>
+              {/* Info abertura */}
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                {comandaLocal.nomeCliente && (
+                  <span className="flex items-center gap-1 text-xs text-gray-400">
+                    <User size={11} /> {comandaLocal.nomeCliente}
+                  </span>
+                )}
+                {comandaLocal.dataAbertura && (
+                  <span className="flex items-center gap-1 text-xs text-gray-400">
+                    <Calendar size={11} /> {formatarData(comandaLocal.dataAbertura)}
+                  </span>
+                )}
+              </div>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-red-500">
+            <button onClick={onClose} className="text-gray-400 hover:text-red-500 mt-1">
               <X size={24} />
             </button>
           </div>

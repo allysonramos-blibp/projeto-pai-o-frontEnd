@@ -150,6 +150,7 @@ const Estoque = () => {
                   <td className="p-6">
                     {item.status === "BAIXO" || item.status === "CRITICO" ? (
                       <span className="bg-orange-50 text-orange-600 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-fit">
+        
                         <AlertTriangle size={12} /> {item.status}
                       </span>
                     ) : item.status === "ESGOTADO" ? (
