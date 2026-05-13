@@ -41,7 +41,6 @@ const Layout = () => {
 
   return (
     <div className="flex min-h-screen bg-[#F8F9FC]">
-      {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-100 flex flex-col p-6 fixed h-full z-30">
         <div className="flex items-center gap-3 mb-10 px-2">
           <div className="bg-[#E67E22] p-2 rounded-xl"><span className="text-white font-bold">ÓP</span></div>
@@ -64,7 +63,6 @@ const Layout = () => {
         </button>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 ml-64 flex flex-col">
         <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-8 sticky top-0 z-20">
           <h2 className="text-[#151D48] font-bold text-xl uppercase tracking-tight">

@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       const data = await loginUser(username, password);
-      const userData = data.usuario || data; // Ajuste conforme o retorno da sua API
+      const userData = data.usuario || data; 
 
       if (data.token) {
         localStorage.setItem('token', data.token);

@@ -268,7 +268,6 @@ const DetalheComandaModal = ({ comanda, onClose, refresh }) => {
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-[32px] w-full max-w-lg p-8 shadow-2xl flex flex-col max-h-[90vh]">
 
-          {/* Header */}
           <div className="flex justify-between items-start mb-4">
             <div>
               <div className="flex items-center gap-3">
@@ -277,7 +276,6 @@ const DetalheComandaModal = ({ comanda, onClose, refresh }) => {
                   <Printer size={20} />
                 </button>
               </div>
-              {/* Info abertura */}
               <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
                 {comandaLocal.nomeCliente && (
                   <span className="flex items-center gap-1 text-xs text-gray-400">
