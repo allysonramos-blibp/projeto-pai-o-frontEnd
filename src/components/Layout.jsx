@@ -31,6 +31,8 @@ const Layout = () => {
     { label: "Estoque", path: "/estoque", icon: Package, roles: ["ADMIN", "GERENTE", "USUARIO"] },
     { label: "Vendas", path: "/vendas", icon: ShoppingCart, roles: ["ADMIN", "GERENTE", "USUARIO"] },
     { label: "Relatórios", path: "/relatorios", icon: BarChart3, roles: ["ADMIN", "GERENTE"] },
+    { label: "Contas a Pagar", path: "/contas-pagar", icon: Receipt, roles: ["ADMIN", "GERENTE"] },
+    { label: "Contas a Receber", path: "/contas-receber", icon: Wallet, roles: ["ADMIN", "GERENTE"] },
     { label: "Usuários", path: "/usuarios", icon: Users, roles: ["ADMIN"] },
   ];
 

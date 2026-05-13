@@ -14,12 +14,19 @@ api.interceptors.request.use((config) => {
     return Promise.reject(error);
 });
 
-export const apiRequest = async (endpoint, options = {}) => {
+// Ajuste na apiRequest para aceitar (endpoint, metodo, dados)
+export const apiRequest = async (endpoint, method = 'GET', data = null) => {
     try {
-        const response = await api(endpoint, options);
+        const response = await api({
+            url: endpoint,
+            method: method,
+            data: data
+        });
         return response.data;
     } catch (error) {
-        throw error;
+        // Melhora a captura de mensagem de erro do backend
+        const message = error.response?.data?.message || error.message;
+        throw new Error(message);
     }
 };
 

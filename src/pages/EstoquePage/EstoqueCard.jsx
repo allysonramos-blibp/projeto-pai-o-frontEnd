@@ -26,16 +26,15 @@ const StatusBadge = ({ status }) => (
 const EstoqueCard = ({ item, onEditar, onExcluir }) => (
   <div className="flex items-center justify-between bg-white p-6 rounded-[32px] shadow-sm border border-gray-50 hover:shadow-md transition-shadow group">
     <div className="flex-1 text-left">
-      <span className="font-bold text-[#151D48] text-xl">{item.nomeProduto}</span>
+      <span className="font-bold text-[#151D48] text-xl uppercase tracking-tight">{item.nomeProduto}</span>
       <div className="flex gap-6 text-[10px] text-gray-400 uppercase font-black tracking-wider mt-1">
         <span>Qtd: <span className={item.quantidade <= item.minimo ? "text-red-500" : "text-[#E67E22]"}>{item.quantidade}</span></span>
         <span>Mín: {item.minimo}</span>
         {item.fornecedor && <span>Fornecedor: <span className="text-[#151D48]">{item.fornecedor}</span></span>}
-        {item.categoria && <span>Cat: <span className="text-[#151D48]">{item.categoria}</span></span>}
       </div>
     </div>
 
-    <div className="text-2xl font-black text-[#151D48] px-8">
+    <div className="text-2xl font-black text-[#151D48] px-8 italic">
       R$ {Number(item.preco ?? 0).toFixed(2).replace(".", ",")}
     </div>
 
@@ -47,14 +46,12 @@ const EstoqueCard = ({ item, onEditar, onExcluir }) => (
       <button
         onClick={() => onEditar(item)}
         className="p-2 rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors"
-        title="Editar"
       >
         <Pencil size={16} />
       </button>
       <button
         onClick={() => onExcluir(item)}
         className="p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
-        title="Excluir"
       >
         <Trash2 size={16} />
       </button>

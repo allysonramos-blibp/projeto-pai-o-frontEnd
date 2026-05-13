@@ -65,93 +65,89 @@ const InputField = ({ label, type = "text", required = false, ...props }) => (
   </div>
 );
 
-
 const EstoqueModal = ({ opcoes, onClose, onSucesso, itemParaEditar = null }) => {
   const modoEdicao = !!itemParaEditar;
-
   const [activeTab, setActiveTab] = useState(modoEdicao ? "estoque" : "produto");
-  const [form, setForm] = useState(() => ({
-    nomeProduto: itemParaEditar?.nomeProduto || "",
-    categoriaId: itemParaEditar?.categoriaId || null,
-    categoriaNome: itemParaEditar?.categoria || "",
-    preco: itemParaEditar?.preco != null ? String(itemParaEditar.preco) : "",
-    unidade: itemParaEditar?.unidade || "un",
-    quantidade: itemParaEditar?.quantidade != null ? String(itemParaEditar.quantidade) : "",
-    minimo: itemParaEditar?.minimo != null ? String(itemParaEditar.minimo) : "",
-    fornecedoresId: itemParaEditar?.fornecedorId || null,
-    fornecedorNome: itemParaEditar?.fornecedor || "",
-    produtoExistenteId: itemParaEditar?.produtoId || null,
-    estoqueId: itemParaEditar?.id || null,
-  }));
-
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState(null);
-  const [logs, setLogs] = useState([]);
 
-  const log = (msg) => { console.log(msg); setLogs((p) => [...p, msg]); };
+  const [form, setForm] = useState({
+    nomeProduto: "",
+    categoriaId: null,
+    categoriaNome: "",
+    preco: "",
+    unidade: "un",
+    quantidade: "",
+    minimo: "",
+    fornecedoresId: null,
+    fornecedorNome: "",
+    produtoExistenteId: null,
+    estoqueId: null,
+  });
+
+  useEffect(() => {
+    if (itemParaEditar) {
+      setForm({
+        nomeProduto: itemParaEditar.nomeProduto || "",
+        categoriaId: itemParaEditar.categoriaId || null,
+        categoriaNome: itemParaEditar.categoria || "",
+        preco: itemParaEditar.preco != null ? String(itemParaEditar.preco) : "",
+        unidade: itemParaEditar.unidade || "un",
+        quantidade: itemParaEditar.quantidade != null ? String(itemParaEditar.quantidade) : "",
+        minimo: itemParaEditar.minimo != null ? String(itemParaEditar.minimo) : "",
+        fornecedoresId: itemParaEditar.fornecedorId || null,
+        fornecedorNome: itemParaEditar.fornecedor || "",
+        produtoExistenteId: itemParaEditar.produtoId || null,
+        estoqueId: itemParaEditar.id || null,
+      });
+    }
+  }, [itemParaEditar]);
+
   const set = (campo, valor) => setForm((p) => ({ ...p, [campo]: valor }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (activeTab === "produto" && !modoEdicao) { setActiveTab("estoque"); return; }
 
-    setLogs([]);
     setErro(null);
     setSalvando(true);
 
     try {
+      const payloadProduto = {
+        nome: form.nomeProduto.trim(),
+        preco: parseFloat(String(form.preco).replace(",", ".")) || 0,
+        unidade: form.unidade,
+        categoriaId: form.categoriaId,
+        fornecedorId: form.fornecedoresId,
+      };
+
+      const payloadEstoque = {
+        quantidade: parseInt(form.quantidade) || 0,
+        minimo: parseInt(form.minimo) || 0,
+      };
+
       if (modoEdicao) {
-        
-        log(`[1] Editando produto ID: ${form.produtoExistenteId}`);
-        await apiRequest(`/api/produtos/update/${form.produtoExistenteId}`, "PATCH", {
-          nome: form.nomeProduto.trim(),
-          preco: parseFloat(String(form.preco).replace(",", ".")) || 0,
-          unidade: form.unidade || "un",
-          categoriaId: form.categoriaId ?? null,
-          fornecedorId: form.fornecedoresId ?? null,
-        });
-
-        log(`[2] Editando estoque ID: ${form.estoqueId}`);
-        await apiRequest(`/api/estoque/${form.estoqueId}`, "PATCH", {
-          quantidade: parseInt(form.quantidade) || 0,
-        });
-
-        log(`[3] ✓ Sucesso!`);
+        // Chamadas PATCH
+        await apiRequest(`/api/produtos/update/${form.produtoExistenteId}`, "PATCH", payloadProduto);
+        await apiRequest(`/api/estoque/${form.estoqueId}`, "PATCH", payloadEstoque);
       } else {
-        // CRIAÇÃO
         let produtoId = form.produtoExistenteId;
 
         if (!produtoId) {
-          const payload = {
-            nome: form.nomeProduto.trim(),
-            preco: parseFloat(String(form.preco).replace(",", ".")) || 0,
-            unidade: form.unidade || "un",
-            categoriaId: form.categoriaId ?? null,
-            fornecedoresId: form.fornecedoresId ?? null,
-          };
-          log(`[1] Criando produto: ${JSON.stringify(payload)}`);
-          const criado = await apiRequest("/api/produtos", "POST", payload);
-          log(`[2] Resposta: ${JSON.stringify(criado)}`);
+          const criado = await apiRequest("/api/produtos", "POST", payloadProduto);
           produtoId = criado?.id;
-          if (!produtoId) throw new Error("Produto criado sem ID.");
         }
 
-        log(`[3] Criando estoque para produtoId: ${produtoId}`);
         await apiRequest("/api/estoque", "POST", {
-          produtoId,
-          quantidade: parseInt(form.quantidade) || 0,
-          minimo: parseInt(form.minimo) || 0,
+          ...payloadEstoque,
+          produtoId: produtoId,
         });
-        log(`[4] ✓ Sucesso!`);
       }
 
-      await new Promise((r) => setTimeout(r, 300));
       onSucesso();
       onClose();
     } catch (err) {
-      console.error(err);
-      log(`[ERRO] ${err.message}`);
-      setErro(err.message);
+      setErro(err.message || "Erro ao processar requisição");
     } finally {
       setSalvando(false);
     }
@@ -162,16 +158,8 @@ const EstoqueModal = ({ opcoes, onClose, onSucesso, itemParaEditar = null }) => 
       <div className="bg-[#D1D5DB] p-8 rounded-[40px] w-full max-w-md shadow-2xl relative max-h-[90vh] overflow-y-auto">
         <button onClick={onClose} className="absolute right-6 top-6 text-gray-500"><X /></button>
         <h3 className="text-2xl font-black text-[#151D48] mb-6 uppercase tracking-tighter">
-          {modoEdicao ? "Editar Produto" : "Novo Registro"}
+          {modoEdicao ? "Editar Registro" : "Novo Registro"}
         </h3>
-
-        {logs.length > 0 && (
-          <div className="mb-4 bg-black/80 rounded-2xl p-3 space-y-1 max-h-32 overflow-y-auto">
-            {logs.map((l, i) => (
-              <p key={i} className={`text-[10px] font-mono ${l.includes("ERRO") ? "text-red-400" : l.includes("✓") ? "text-green-400" : "text-gray-300"}`}>{l}</p>
-            ))}
-          </div>
-        )}
 
         {erro && (
           <div className="mb-4 bg-red-50 border border-red-200 rounded-2xl p-3">
@@ -187,16 +175,14 @@ const EstoqueModal = ({ opcoes, onClose, onSucesso, itemParaEditar = null }) => 
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          
           {(activeTab === "produto" || modoEdicao) && (
             <div className="space-y-4">
               {!modoEdicao && (
                 <ComboBox
-                  label="Produto"
+                  label="Pesquisar Produto"
                   value={form.nomeProduto}
                   opcoes={opcoes.produtos}
-                  placeholder="Digite ou selecione..."
-                  required
+                  placeholder="Selecione ou digite novo..."
                   onChange={(op) => {
                     if (op && typeof op === "object") {
                       setForm((p) => ({
@@ -216,17 +202,10 @@ const EstoqueModal = ({ opcoes, onClose, onSucesso, itemParaEditar = null }) => 
                 />
               )}
 
-              {modoEdicao && (
-                <div className="bg-white/60 rounded-2xl p-4">
-                  <p className="text-[10px] font-black text-orange-500 uppercase mb-1">Editando produto</p>
-                  <p className="font-bold text-[#151D48] text-lg">{form.nomeProduto}</p>
-                </div>
-              )}
-
               <InputField label="Nome do Produto" type="text" value={form.nomeProduto}
-                onChange={(e) => set("nomeProduto", e.target.value)} required={modoEdicao} />
+                onChange={(e) => set("nomeProduto", e.target.value)} required />
 
-              <InputField label="Preço (R$)" type="number" step="0.01" min="0" value={form.preco}
+              <InputField label="Preço (R$)" type="text" value={form.preco}
                 onChange={(e) => set("preco", e.target.value)} required />
 
               <div className="grid grid-cols-2 gap-4">
@@ -248,23 +227,20 @@ const EstoqueModal = ({ opcoes, onClose, onSucesso, itemParaEditar = null }) => 
             </div>
           )}
 
-          {/* ABA ESTOQUE */}
           {(activeTab === "estoque" || modoEdicao) && (
             <div className="space-y-4">
-              {modoEdicao && <div className="border-t border-gray-300 pt-4">
-                <p className="text-[10px] font-black text-gray-400 uppercase mb-3">Dados de Estoque</p>
-              </div>}
+              {modoEdicao && <div className="border-t border-gray-300 pt-4" />}
               <div className="grid grid-cols-2 gap-4">
                 <InputField label="Quantidade Atual" type="number" min="0" value={form.quantidade}
                   onChange={(e) => set("quantidade", e.target.value)} required />
                 <InputField label="Mínimo" type="number" min="0" value={form.minimo}
-                  onChange={(e) => set("minimo", e.target.value)} required={!modoEdicao} />
+                  onChange={(e) => set("minimo", e.target.value)} required />
               </div>
 
               {form.minimo && form.quantidade && parseInt(form.minimo) > parseInt(form.quantidade) && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-3">
                   <p className="text-xs text-yellow-700 font-medium flex items-center gap-1">
-                    <AlertTriangle size={12} /> Mínimo maior que quantidade — CRÍTICO
+                    <AlertTriangle size={12} /> Alerta: Estoque abaixo do mínimo.
                   </p>
                 </div>
               )}
@@ -281,9 +257,9 @@ const EstoqueModal = ({ opcoes, onClose, onSucesso, itemParaEditar = null }) => 
               {!modoEdicao && activeTab === "estoque" ? "← Voltar" : "Cancelar"}
             </button>
             <button type="submit"
-              disabled={salvando || (!modoEdicao && activeTab === "produto" && (!form.nomeProduto || !form.preco))}
+              disabled={salvando}
               className="flex-1 p-4 bg-[#7B3F00] text-white font-black rounded-2xl uppercase text-xs disabled:opacity-50">
-              {salvando ? "Salvando..." : modoEdicao ? "Salvar Alterações" : activeTab === "produto" ? "Próximo →" : "Finalizar"}
+              {salvando ? "Processando..." : modoEdicao ? "Salvar" : activeTab === "produto" ? "Próximo" : "Finalizar"}
             </button>
           </div>
         </form>

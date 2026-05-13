@@ -16,6 +16,7 @@ const Estoque = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [itemParaEditar, setItemParaEditar] = useState(null);
   const [opcoes, setOpcoes] = useState({ produtos: [], categorias: [], fornecedores: [] });
 
   const carregarDados = async () => {
@@ -46,13 +47,29 @@ const Estoque = () => {
         fornecedores: extrairArray(resFornecedores),
       });
     } catch (err) {
-      console.error("Erro ao carregar:", err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => { carregarDados(); }, []);
+
+  const handleEditar = (item) => {
+    setItemParaEditar(item);
+    setShowModal(true);
+  };
+
+  const handleExcluir = async (item) => {
+    if (window.confirm(`Excluir ${item.nomeProduto} do estoque?`)) {
+      try {
+        await apiRequest(`/api/estoque/${item.id}`, "DELETE");
+        carregarDados();
+      } catch (err) {
+        alert("Erro ao excluir item.");
+      }
+    }
+  };
 
   const itensFiltrados = useMemo(() =>
     itens.filter(i => i.nomeProduto?.toLowerCase().includes(searchTerm.toLowerCase())),
@@ -64,10 +81,10 @@ const Estoque = () => {
       <header className="flex justify-between items-center mb-10">
         <div>
           <h2 className="text-3xl font-black text-[#151D48] tracking-tighter uppercase italic">Estoque Ó Pai, Ó</h2>
-          <p className="text-gray-400 font-medium">Controle total de produtos e quantidades</p>
+          <p className="text-gray-400 font-medium">Controle de produtos e quantidades</p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => { setItemParaEditar(null); setShowModal(true); }}
           className="bg-[#E67E22] text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-[#d35400] transition-all shadow-lg"
         >
           <Plus size={20} /> Novo Registro
@@ -78,7 +95,7 @@ const Estoque = () => {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
         <input
           type="text"
-          placeholder="Buscar produto por nome..."
+          placeholder="Buscar produto..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full p-4 pl-12 bg-white rounded-full border-none shadow-sm focus:ring-2 focus:ring-[#E67E22] outline-none text-[#151D48] font-medium"
@@ -87,20 +104,24 @@ const Estoque = () => {
 
       <div className="space-y-4">
         {loading ? (
-          <p className="text-center text-gray-400 py-10 font-bold animate-pulse">Sincronizando...</p>
-        ) : itensFiltrados.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-[32px] border border-dashed border-gray-300">
-            <p className="text-gray-400 font-bold">Nenhum item com estoque registrado.</p>
-          </div>
+          <p className="text-center text-gray-400 py-10 font-bold animate-pulse">Carregando...</p>
         ) : (
-          itensFiltrados.map((item) => <EstoqueCard key={item.id} item={item} />)
+          itensFiltrados.map((item) => (
+            <EstoqueCard 
+              key={item.id} 
+              item={item} 
+              onEditar={handleEditar} 
+              onExcluir={handleExcluir} 
+            />
+          ))
         )}
       </div>
 
       {showModal && (
         <EstoqueModal
           opcoes={opcoes}
-          onClose={() => setShowModal(false)}
+          itemParaEditar={itemParaEditar}
+          onClose={() => { setShowModal(false); setItemParaEditar(null); }}
           onSucesso={carregarDados}
         />
       )}
