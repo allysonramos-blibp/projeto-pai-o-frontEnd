@@ -14,7 +14,7 @@ const Login = () => {
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
 
-  const [registerForm, setRegisterForm] = useState({ nome: "", username: "", password: "" });
+  const [registerForm, setRegisterForm] = useState({ nome: "", username: "", email: "", password: "" });
   const [forgotEmail, setForgotEmail] = useState(""); 
 
   const { login, loading } = useAuth();
@@ -46,7 +46,7 @@ const Login = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!registerForm.nome.trim() || !registerForm.username.trim() || !registerForm.password.trim()) {
+    if (!registerForm.nome.trim() || !registerForm.username.trim() || !registerForm.email.trim() || !registerForm.password.trim()) {
       alert("Preencha todos os campos para se cadastrar.");
       return;
     }
@@ -55,12 +55,13 @@ const Login = () => {
       await apiRequest("/auth/register", "POST", {
         nome: registerForm.nome.trim(),
         login: registerForm.username.trim(), 
+        email: registerForm.email.trim(),
         senha: registerForm.password,
         perfil: "USER"
       });
       alert("Usuário criado com sucesso! Agora você já pode fazer login.");
       setShowRegisterModal(false);
-      setRegisterForm({ nome: "", username: "", password: "" });
+      setRegisterForm({ nome: "", username: "", email: "", password: "" });
     } catch (err) {
       alert("Erro ao criar usuário: " + (err.message || "Tente outro e-mail de usuário"));
     } finally {
@@ -114,12 +115,12 @@ const Login = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block">E-mail de Usuário</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block">Usuário ou E-mail</label>
               <input
-                type="email"
+                type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Digite seu e-mail"
+                placeholder="Digite seu usuário ou e-mail"
                 disabled={isSubmitting}
                 autoComplete="username"
                 autoFocus
@@ -169,8 +170,12 @@ const Login = () => {
                 <input type="text" value={registerForm.nome} onChange={(e) => setRegisterForm({...registerForm, nome: e.target.value})} placeholder="Seu nome" className="w-full p-4 bg-[#F0F3F9] rounded-2xl border-none outline-none font-medium text-[#151D48]" />
               </div>
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block">E-mail de Acesso</label>
-                <input type="email" value={registerForm.username} onChange={(e) => setRegisterForm({...registerForm, username: e.target.value})} placeholder="Ex: nome@email.com" className="w-full p-4 bg-[#F0F3F9] rounded-2xl border-none outline-none font-medium text-[#151D48]" />
+                <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block">Nome de Usuário (Login)</label>
+                <input type="text" value={registerForm.username} onChange={(e) => setRegisterForm({...registerForm, username: e.target.value})} placeholder="Ex: allyson.admin" className="w-full p-4 bg-[#F0F3F9] rounded-2xl border-none outline-none font-medium text-[#151D48]" />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block">E-mail de Recuperação</label>
+                <input type="email" value={registerForm.email} onChange={(e) => setRegisterForm({...registerForm, email: e.target.value})} placeholder="Ex: nome@email.com" className="w-full p-4 bg-[#F0F3F9] rounded-2xl border-none outline-none font-medium text-[#151D48]" />
               </div>
               <div>
                 <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block">Senha</label>
