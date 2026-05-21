@@ -15,16 +15,13 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Usuarios from "./pages/Usuarios/Usuarios.jsx";
 import Perfil from "./pages/PerfilPage/Perfil.jsx";
 import Configuracoes from './pages/Configuracoes/Configuracoes.jsx';
-
+import RedefinirSenha from './pages/LoginPage/RedefinirSenha.jsx';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  
-  
   const savedUser = localStorage.getItem('usuario');
   
   if (loading) return <div className="flex items-center justify-center h-screen">Carregando...</div>; 
-  
   if (user || savedUser) return children;
   
   return <Navigate to="/login" replace />;
@@ -37,8 +34,7 @@ function App() {
         <Routes>
           
           <Route path="/login" element={<Login />} />
-
-          
+          <Route path="/redefinir-senha" element={<RedefinirSenha />} />
           <Route
             element={
               <PrivateRoute>
@@ -47,8 +43,6 @@ function App() {
             }
           >
             <Route path="/home" element={<Home />} />
-            
-            
             <Route path="/estoque" element={<ProtectedRoute><Estoque /></ProtectedRoute>} />
             <Route path="/comandas" element={<ProtectedRoute><Comandas /></ProtectedRoute>} />
             <Route path="/vendas" element={<ProtectedRoute><Vendas /></ProtectedRoute>} />
@@ -69,12 +63,10 @@ function App() {
             } />
           </Route>
 
-          
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
-          <Route path="/perfil" element={<Perfil />} /> {/* ADICIONADO */}
-          <Route path="/configuracoes" element={<Configuracoes />} /> {/* ADICIONADO */}
-          
+          <Route path="/perfil" element={<Perfil />} />
+          <Route path="/configuracoes" element={<Configuracoes />} />
           
         </Routes>
       </AuthProvider>

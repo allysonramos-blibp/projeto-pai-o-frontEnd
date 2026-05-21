@@ -14,7 +14,6 @@ api.interceptors.request.use((config) => {
     return Promise.reject(error);
 });
 
-// Ajuste na apiRequest para aceitar (endpoint, metodo, dados)
 export const apiRequest = async (endpoint, method = 'GET', data = null) => {
     try {
         const response = await api({
@@ -24,8 +23,16 @@ export const apiRequest = async (endpoint, method = 'GET', data = null) => {
         });
         return response.data;
     } catch (error) {
-        // Melhora a captura de mensagem de erro do backend
-        const message = error.response?.data?.message || error.message;
+        let message = "Erro ao processar solicitação";
+        
+        if (error.response && error.response.data) {
+            message = typeof error.response.data === 'string' 
+                ? error.response.data 
+                : (error.response.data.message || message);
+        } else {
+            message = error.message;
+        }
+
         throw new Error(message);
     }
 };

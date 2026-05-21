@@ -14,7 +14,6 @@ const Layout = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -36,7 +35,9 @@ const Layout = () => {
     { label: "Usuários", path: "/usuarios", icon: Users, roles: ["ADMIN"] },
   ];
 
-  const userRole = user?.perfil?.trim().toUpperCase() || "";
+  const rawRole = user?.perfil?.trim().toUpperCase() || "";
+  const userRole = (rawRole === "USER" || rawRole === "USUÁRIO") ? "USUARIO" : rawRole;
+
   const visibleMenuItems = menuItems.filter(item => item.roles.includes(userRole));
 
   return (
@@ -82,7 +83,9 @@ const Layout = () => {
               >
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-black text-[#151D48] leading-none mb-1">{user?.nome}</p>
-                  <p className="text-[10px] text-[#737791] font-bold uppercase tracking-wider">{userRole}</p>
+                  <p className="text-[10px] text-[#737791] font-bold uppercase tracking-wider">
+                    {userRole === "USUARIO" ? "USUÁRIO" : userRole}
+                  </p>
                 </div>
                 <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center text-[#E67E22]">
                   <User size={24} />

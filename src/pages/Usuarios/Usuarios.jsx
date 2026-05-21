@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../../services/auth";
 import { useAuth } from "../../contexts/authContext";
-import { Shield, Trash2, UserPlus, RefreshCw, Search } from "lucide-react";
+import { Trash2, UserPlus, RefreshCw, Search, Pencil } from "lucide-react";
 
 const PERFIL_CFG = {
   ADMIN:    { cls: "bg-purple-100 text-purple-700", label: "ADMIN" },
@@ -18,9 +18,10 @@ const PerfilBadge = ({ perfil }) => {
   );
 };
 
+
 const Modal = ({ titulo, onClose, children }) => (
   <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-    <div className="bg-white rounded-[32px] w-full max-w-sm shadow-2xl p-8 relative">
+    <div className="bg-white rounded-[32px] w-full max-w-sm shadow-2xl p-8 relative animate-in fade-in zoom-in-95 duration-150">
       <h3 className="text-xl font-black text-[#151D48] mb-6 uppercase tracking-tighter">{titulo}</h3>
       {children}
     </div>
@@ -40,39 +41,63 @@ const Usuarios = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [confirmacao, setConfirmacao] = useState(null); // { tipo: 'excluir'|'promover', usuario }
+  const [usuarioEditando, setUsuarioEditando] = useState(null); 
+  const [confirmacao, setConfirmacao] = useState(null);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState(null);
 
-  const [novoUsuario, setNovoUsuario] = useState({
+  const [formUsuario, setFormUsuario] = useState({
     nome: "", login: "", senha: "", perfil: "USUARIO",
   });
 
   const carregar = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/usuarios");
+      const data = await apiRequest("api/usuarios");
       setUsuarios(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
-    } finally {
+    } 
+    finally {
       setLoading(false);
     }
   };
 
   useEffect(() => { carregar(); }, []);
 
-  const handleCadastrar = async (e) => {
+  const abrirModalCadastro = () => {
+    setUsuarioEditando(null);
+    setFormUsuario({ nome: "", login: "", senha: "", perfil: "USUARIO" });
+    setErro(null);
+    setShowModal(true);
+  };
+
+  const abrirModalEdicao = (usuario) => {
+    setUsuarioEditando(usuario);
+    setFormUsuario({
+      nome: usuario.nome,
+      login: usuario.login,
+      senha: "", 
+      perfil: usuario.perfil
+    });
+    setErro(null);
+    setShowModal(true);
+  };
+
+  const handleSalvar = async (e) => {
     e.preventDefault();
     setSalvando(true);
     setErro(null);
     try {
-      await apiRequest("/usuarios", "POST", novoUsuario);
+      if (usuarioEditando) {
+        await apiRequest(`api/usuarios/${usuarioEditando.id}`, "PUT", formUsuario);
+      } else {
+        await apiRequest("api/usuarios", "POST", formUsuario);
+      }
       setShowModal(false);
-      setNovoUsuario({ nome: "", login: "", senha: "", perfil: "USUARIO" });
       await carregar();
     } catch (err) {
-      setErro(err.message || "Erro ao cadastrar");
+      setErro(err.message || "Erro ao salvar alterações");
     } finally {
       setSalvando(false);
     }
@@ -81,26 +106,14 @@ const Usuarios = () => {
   const handleExcluir = async () => {
     if (!confirmacao) return;
     setSalvando(true);
+    setErro(null);
     try {
-      await apiRequest(`/usuarios/${confirmacao.usuario.id}`, "DELETE");
-      setConfirmacao(null);
-      await carregar();
+      
+      await apiRequest(`api/usuarios/${confirmacao.usuario.id}`, "DELETE");
+      setConfirmacao(null); 
+      await carregar();     
     } catch (err) {
-      setErro(err.message || "Erro ao excluir");
-    } finally {
-      setSalvando(false);
-    }
-  };
-
-  const handlePromover = async () => {
-    if (!confirmacao) return;
-    setSalvando(true);
-    try {
-      await apiRequest(`/usuarios/${confirmacao.usuario.id}/tornar-admin`, "PATCH");
-      setConfirmacao(null);
-      await carregar();
-    } catch (err) {
-      setErro(err.message || "Erro ao promover");
+      setErro(err.message || "Erro ao excluir usuário");
     } finally {
       setSalvando(false);
     }
@@ -119,7 +132,7 @@ const Usuarios = () => {
           <p className="text-gray-400 font-medium">Gerencie os acessos ao sistema</p>
         </div>
         <button
-          onClick={() => { setShowModal(true); setErro(null); }}
+          onClick={abrirModalCadastro}
           className="bg-[#E67E22] text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-[#d35400] transition-all shadow-lg shadow-orange-100"
         >
           <UserPlus size={20} /> Novo Usuário
@@ -165,15 +178,14 @@ const Usuarios = () => {
               <PerfilBadge perfil={u.perfil} />
 
               <div className="flex items-center gap-2 ml-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                {u.perfil !== "ADMIN" && (
-                  <button
-                    onClick={() => setConfirmacao({ tipo: "promover", usuario: u })}
-                    className="p-2 rounded-xl bg-purple-50 text-purple-500 hover:bg-purple-100 transition-colors"
-                    title="Tornar Admin"
-                  >
-                    <Shield size={16} />
-                  </button>
-                )}
+                <button
+                  onClick={() => abrirModalEdicao(u)}
+                  className="p-2 rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors"
+                  title="Editar Usuário"
+                >
+                  <Pencil size={16} />
+                </button>
+
                 {u.id !== meUser?.id && (
                   <button
                     onClick={() => setConfirmacao({ tipo: "excluir", usuario: u })}
@@ -189,72 +201,61 @@ const Usuarios = () => {
         )}
       </div>
 
-      {/* Modal novo usuário */}
+      
       {showModal && (
-        <Modal titulo="Novo Usuário" onClose={() => setShowModal(false)}>
-          <form onSubmit={handleCadastrar} className="space-y-4">
-            <InputField label="Nome" value={novoUsuario.nome}
-              onChange={(e) => setNovoUsuario(p => ({ ...p, nome: e.target.value }))} required />
-            <InputField label="Login" value={novoUsuario.login}
-              onChange={(e) => setNovoUsuario(p => ({ ...p, login: e.target.value }))} required />
-            <InputField label="Senha" type="password" value={novoUsuario.senha}
-              onChange={(e) => setNovoUsuario(p => ({ ...p, senha: e.target.value }))} required />
+        <Modal titulo={usuarioEditando ? "Editar Usuário" : "Novo Usuário"} onClose={() => setShowModal(false)}>
+          <form onSubmit={handleSalvar} className="space-y-4">
+            <InputField label="Nome" value={formUsuario.nome}
+              onChange={(e) => setFormUsuario(p => ({ ...p, nome: e.target.value }))} required />
+            
+            <InputField label="Login" value={formUsuario.login}
+              onChange={(e) => setFormUsuario(p => ({ ...p, login: e.target.value }))} required />
+            
+            {!usuarioEditando && (
+              <InputField label="Senha" type="password" value={formUsuario.senha}
+                onChange={(e) => setFormUsuario(p => ({ ...p, senha: e.target.value }))} required />
+            )}
+            
             <div>
               <label className="text-[10px] font-black text-gray-400 mb-1 block uppercase ml-1">Perfil</label>
               <select
                 className="w-full p-4 bg-[#F0F3F9] rounded-2xl border-none focus:ring-2 focus:ring-[#E67E22] outline-none font-medium text-[#151D48]"
-                value={novoUsuario.perfil}
-                onChange={(e) => setNovoUsuario(p => ({ ...p, perfil: e.target.value }))}
+                value={formUsuario.perfil}
+                onChange={(e) => setFormUsuario(p => ({ ...p, perfil: e.target.value }))}
               >
-                <option value="USUARIO">Usuário</option>
-                <option value="GERENTE">Gerente</option>
-                <option value="ADMIN">Admin</option>
+                <option value="USUARIO">Usuário (Comandas, Estoque, Vendas)</option>
+                <option value="GERENTE">Gerente (Acesso parcial a Finanças)</option>
+                <option value="ADMIN">Admin (Acesso Total)</option>
               </select>
             </div>
+            
             {erro && <p className="text-xs text-red-500 font-bold">❌ {erro}</p>}
+            
             <div className="flex gap-4 pt-2">
               <button type="button" onClick={() => setShowModal(false)}
                 className="flex-1 font-black text-gray-500 uppercase text-[10px]">Cancelar</button>
               <button type="submit" disabled={salvando}
                 className="flex-1 p-4 bg-[#E67E22] text-white font-black rounded-2xl uppercase text-xs disabled:opacity-50">
-                {salvando ? "Salvando..." : "Cadastrar"}
+                {salvando ? "Salvar..." : usuarioEditando ? "Atualizar" : "Cadastrar"}
               </button>
             </div>
           </form>
         </Modal>
       )}
 
-      {/* Modal confirmação excluir */}
-      {confirmacao?.tipo === "excluir" && (
+      
+      {confirmacao && confirmacao.tipo === "excluir" && (
         <Modal titulo="Excluir Usuário" onClose={() => setConfirmacao(null)}>
           <p className="text-sm text-gray-600 mb-6">
-            Tem certeza que deseja excluir <span className="font-black text-[#151D48]">{confirmacao.usuario.nome}</span>? Esta ação não pode ser desfeita.
+            Tem certeza que deseja excluir o usuário <span className="font-black text-[#151D48]">{confirmacao.usuario.nome}</span>? Esta ação não pode ser desfeita.
           </p>
           {erro && <p className="text-xs text-red-500 font-bold mb-4">❌ {erro}</p>}
           <div className="flex gap-4">
-            <button onClick={() => setConfirmacao(null)}
+            <button type="button" onClick={() => setConfirmacao(null)}
               className="flex-1 font-black text-gray-500 uppercase text-[10px]">Cancelar</button>
-            <button onClick={handleExcluir} disabled={salvando}
+            <button type="button" onClick={handleExcluir} disabled={salvando}
               className="flex-1 p-4 bg-red-500 text-white font-black rounded-2xl uppercase text-xs disabled:opacity-50">
               {salvando ? "Excluindo..." : "Confirmar"}
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {/* Modal confirmação promover */}
-      {confirmacao?.tipo === "promover" && (
-        <Modal titulo="Promover a Admin" onClose={() => setConfirmacao(null)}>
-          <p className="text-sm text-gray-600 mb-6">
-            Promover <span className="font-black text-[#151D48]">{confirmacao.usuario.nome}</span> para <span className="font-black text-purple-600">ADMIN</span>? Ele terá acesso total ao sistema.
-          </p>
-          {erro && <p className="text-xs text-red-500 font-bold mb-4">❌ {erro}</p>}
-          <div className="flex gap-4">
-            <button onClick={() => setConfirmacao(null)}
-              className="flex-1 font-black text-gray-500 uppercase text-[10px]">Cancelar</button>
-            <button onClick={handlePromover} disabled={salvando}
-              className="flex-1 p-4 bg-purple-500 text-white font-black rounded-2xl uppercase text-xs disabled:opacity-50">
-              {salvando ? "Promovendo..." : "Confirmar"}
             </button>
           </div>
         </Modal>
