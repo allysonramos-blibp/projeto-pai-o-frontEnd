@@ -32,8 +32,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      // 💡 GARANTIA: Mapeamos 'username' para 'login' e 'password' para 'senha'
-      // para bater exatamente com o seu AutenticacaoDTO do Spring Boot
+      
       const data = await loginUser({ 
         login: username.trim(), 
         senha: password 
@@ -49,7 +48,7 @@ export const AuthProvider = ({ children }) => {
       }
       throw new Error("Token não recebido do servidor");
     } catch (err) {
-      // Retorna a mensagem amigável vinda do servidor ou o erro padrão
+      
       return { success: false, error: err.message || "Usuário ou senha inválidos" };
     }
   };

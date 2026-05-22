@@ -37,8 +37,7 @@ export const apiRequest = async (endpoint, method = 'GET', data = null) => {
     }
 };
 
-// 💡 CORREÇÃO: Adicionamos as chaves { login, senha } para desestruturar 
-// corretamente o objeto enviado pelo AuthContext
+
 export const loginUser = async ({ login, senha }) => {
     const response = await api.post('/auth/login', { login, senha });
     const { token, usuario } = response.data;
