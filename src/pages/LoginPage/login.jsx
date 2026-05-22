@@ -15,7 +15,7 @@ const Login = () => {
   const [modalLoading, setModalLoading] = useState(false);
 
   const [registerForm, setRegisterForm] = useState({ nome: "", username: "", email: "", password: "" });
-  const [forgotEmail, setForgotEmail] = useState(""); 
+  const [forgotForm, setForgotForm] = useState({ username: "", email: "" }); 
 
   const { login, loading } = useAuth();
   const navigate = useNavigate();
@@ -63,7 +63,7 @@ const Login = () => {
       setShowRegisterModal(false);
       setRegisterForm({ nome: "", username: "", email: "", password: "" });
     } catch (err) {
-      alert("Erro ao criar usuário: " + (err.message || "Tente outro e-mail de usuário"));
+      alert("Erro ao criar usuário: " + (err.message || "Tente outro nome de usuário"));
     } finally {
       setModalLoading(false);
     }
@@ -71,20 +71,21 @@ const Login = () => {
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
-    if (!forgotEmail.trim()) {
-      alert("Por favor, digite seu e-mail.");
+    if (!forgotForm.username.trim() || !forgotForm.email.trim()) {
+      alert("Por favor, preencha o usuário e o e-mail.");
       return;
     }
     setModalLoading(true);
     try {
       await apiRequest("/api/usuarios/esqueci-senha", "POST", {
-        login: forgotEmail.trim()
+        login: forgotForm.username.trim(),
+        email: forgotForm.email.trim()
       });
-      alert("📬 Se este e-mail estiver cadastrado no sistema, um link seguro de recuperação foi enviado!");
+      alert("📬 Se as informações estiverem corretas, o link de recuperação foi enviado para o e-mail informado!");
       setShowForgotModal(false);
-      setForgotEmail("");
+      setForgotForm({ username: "", email: "" });
     } catch (err) {
-      alert("Erro ao processar solicitação: " + (err.message || "E-mail não encontrado"));
+      alert("Erro ao processar solicitação: " + (err.message || "Dados inválidos"));
     } finally {
       setModalLoading(false);
     }
@@ -192,16 +193,27 @@ const Login = () => {
           <div className="bg-[#D1D5DB] p-8 rounded-[40px] w-full max-w-sm shadow-2xl relative">
             <button onClick={() => setShowForgotModal(false)} className="absolute right-6 top-6 text-gray-500"><X size={20} /></button>
             <h3 className="text-2xl font-black text-[#151D48] mb-2 uppercase tracking-tighter">Recuperar Acesso</h3>
-            <p className="text-xs text-gray-500 mb-6 font-medium">Insira o e-mail da sua conta para receber o link de redefinição real.</p>
+            <p className="text-xs text-gray-500 mb-6 font-medium">Informe o usuário que deseja alterar e o e-mail de destino.</p>
             <form onSubmit={handleForgotPassword} className="space-y-4">
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block">Seu E-mail</label>
+                <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block">Nome de Usuário (Login)</label>
+                <input 
+                  type="text" 
+                  required
+                  value={forgotForm.username} 
+                  onChange={(e) => setForgotForm({...forgotForm, username: e.target.value})} 
+                  placeholder="Digite o usuário da conta" 
+                  className="w-full p-4 bg-[#F0F3F9] rounded-2xl border-none outline-none font-medium text-[#151D48]" 
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-gray-400 uppercase ml-1 mb-1 block">E-mail para Envio</label>
                 <input 
                   type="email" 
                   required
-                  value={forgotEmail} 
-                  onChange={(e) => setForgotEmail(e.target.value)} 
-                  placeholder="Digite seu e-mail cadastrado" 
+                  value={forgotForm.email} 
+                  onChange={(e) => setForgotForm({...forgotForm, email: e.target.value})} 
+                  placeholder="Digite o e-mail onde deseja receber o link" 
                   className="w-full p-4 bg-[#F0F3F9] rounded-2xl border-none outline-none font-medium text-[#151D48]" 
                 />
               </div>
