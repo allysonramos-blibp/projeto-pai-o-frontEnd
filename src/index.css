@@ -1,1 +1,26 @@
 @import "tailwindcss";
+
+/* Cores Padrão (Tema Claro / Orange) */
+:root, [data-theme="orange"] {
+  --bg-principal: #f9fafb;     /* gray-50 */
+  --bg-card: #ffffff;          /* white */
+  --texto-titulo: #151d48;     /* o azul escuro que você usa */
+  --texto-corpo: #737791;
+  --borda: #f1f5f9;            /* gray-100 */
+}
+
+/* Cores do Modo Escuro */
+[data-theme="dark"] {
+  --bg-principal: #0f172a;     /* slate-900 (Fundo escuro profissional) */
+  --bg-card: #1e293b;          /* slate-800 */
+  --texto-titulo: #f8fafc;     /* slate-50 (Texto quase branco) */
+  --texto-corpo: #94a3b8;      /* slate-400 */
+  --borda: #334155;            /* slate-700 */
+}
+
+/* Aplica o fundo dinâmico no corpo da página inteira */
+body {
+  background-color: var(--bg-principal);
+  color: var(--texto-corpo);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react'; 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/authContext.jsx';
 import Login from './pages/LoginPage/login.jsx';
@@ -28,6 +28,12 @@ const PrivateRoute = ({ children }) => {
 };
 
 function App() {
+  
+  useEffect(() => {
+    const temaSalvo = localStorage.getItem('app-theme') || 'orange';
+    document.documentElement.setAttribute('data-theme', temaSalvo);
+  }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>
@@ -35,8 +41,10 @@ function App() {
           
           <Route path="/login" element={<Login />} />
           <Route path="/redefinir-senha" element={<RedefinirSenha />} />
+          
+          
           <Route
-            element={
+            element = {
               <PrivateRoute>
                 <Layout />
               </PrivateRoute>
@@ -49,6 +57,10 @@ function App() {
             <Route path="/contas-pagar" element={<ContasPagar />} />
             <Route path="/fornecedores" element={<Fornecedores />} />
             <Route path="/contas-receber" element={<ContasReceber />} />
+
+            
+            <Route path="/perfil" element={<Perfil />} />
+            <Route path="/configuracoes" element={<Configuracoes />} />
 
             <Route path="/relatorios" element={
               <ProtectedRoute perfisPermitidos={["ADMIN", "GERENTE"]}>
@@ -63,10 +75,9 @@ function App() {
             } />
           </Route>
 
+          
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
-          <Route path="/perfil" element={<Perfil />} />
-          <Route path="/configuracoes" element={<Configuracoes />} />
           
         </Routes>
       </AuthProvider>

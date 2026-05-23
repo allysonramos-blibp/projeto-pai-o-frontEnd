@@ -77,34 +77,46 @@ const Estoque = () => {
   );
 
   return (
-    <div className="p-8 bg-[#F8F9FC] min-h-screen">
+    <div className="p-8 bg-[#F8F9FC] dark:bg-[#0F172A] min-h-screen transition-colors duration-200">
       <header className="flex justify-between items-center mb-10">
         <div>
-          <h2 className="text-3xl font-black text-[#151D48] tracking-tighter uppercase italic">Estoque Ó Pai, Ó</h2>
-          <p className="text-gray-400 font-medium">Controle de produtos e quantidades</p>
+          <h2 className="text-3xl font-black text-[#151D48] dark:text-white tracking-tighter uppercase italic transition-colors">
+            Estoque Ó Pai, Ó
+          </h2>
+          <p className="text-gray-400 dark:text-slate-400 font-medium transition-colors">
+            Controle de produtos e quantidades
+          </p>
         </div>
         <button
           onClick={() => { setItemParaEditar(null); setShowModal(true); }}
-          className="bg-[#E67E22] text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-[#d35400] transition-all shadow-lg"
+          className="bg-[#E67E22] hover:bg-[#d35400] text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-orange-100 dark:shadow-none"
         >
           <Plus size={20} /> Novo Registro
         </button>
       </header>
 
       <div className="relative mb-8">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={20} />
         <input
           type="text"
           placeholder="Buscar produto..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full p-4 pl-12 bg-white rounded-full border-none shadow-sm focus:ring-2 focus:ring-[#E67E22] outline-none text-[#151D48] font-medium"
+          className="w-full p-4 pl-12 bg-white dark:bg-[#1E293B] rounded-full border-none shadow-sm focus:ring-2 focus:ring-[#E67E22] outline-none text-[#151D48] dark:text-white placeholder-gray-400 dark:placeholder-slate-500 font-medium transition-all"
         />
       </div>
 
       <div className="space-y-4">
         {loading ? (
-          <p className="text-center text-gray-400 py-10 font-bold animate-pulse">Carregando...</p>
+          <p className="text-center text-gray-400 dark:text-slate-500 py-10 font-bold animate-pulse">
+            Carregando...
+          </p>
+        ) : itensFiltrados.length === 0 ? (
+          <div className="text-center py-20 bg-white dark:bg-[#1E293B] rounded-[32px] border border-dashed border-gray-300 dark:border-slate-700 transition-colors">
+            <p className="text-gray-400 dark:text-slate-500 font-bold">
+              Nenhum item encontrado no estoque.
+            </p>
+          </div>
         ) : (
           itensFiltrados.map((item) => (
             <EstoqueCard 
@@ -129,4 +141,4 @@ const Estoque = () => {
   );
 };
 
-export default Estoque;
+export default Estoque; 
