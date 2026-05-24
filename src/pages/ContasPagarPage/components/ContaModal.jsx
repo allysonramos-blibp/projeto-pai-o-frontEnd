@@ -67,9 +67,9 @@ const ContaModal = ({ conta, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-[32px] w-full max-w-md p-8 shadow-2xl">
+      <div className="bg-[var(--bg-card)] rounded-[32px] w-full max-w-md p-8 shadow-2xl border border-[var(--borda)]">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-[#151D48]">
+          <h2 className="text-xl font-bold text-[var(--texto-titulo)]">
             {isEditing ? 'Editar Conta' : 'Nova Conta a Pagar'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-red-500">
@@ -85,7 +85,7 @@ const ContaModal = ({ conta, onClose, onSuccess }) => {
               placeholder="Descrição *"
               value={form.descricao}
               onChange={handleChange}
-              className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-2xl outline-none ring-1 ring-gray-100 focus:ring-orange-400 text-sm"
+              className="w-full pl-10 pr-4 py-3 bg-[var(--bg-principal)] rounded-2xl outline-none border border-[var(--borda)] focus:ring-2 focus:ring-[#E67E22] text-sm text-[var(--texto-titulo)]"
             />
           </div>
 
@@ -98,7 +98,7 @@ const ContaModal = ({ conta, onClose, onSuccess }) => {
               placeholder="Valor *"
               value={form.valor}
               onChange={handleChange}
-              className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-2xl outline-none ring-1 ring-gray-100 focus:ring-orange-400 text-sm"
+              className="w-full pl-10 pr-4 py-3 bg-[var(--bg-principal)] rounded-2xl outline-none border border-[var(--borda)] focus:ring-2 focus:ring-[#E67E22] text-sm text-[var(--texto-titulo)]"
             />
           </div>
 
@@ -109,7 +109,7 @@ const ContaModal = ({ conta, onClose, onSuccess }) => {
               type="date"
               value={form.dataVencimento}
               onChange={handleChange}
-              className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-2xl outline-none ring-1 ring-gray-100 focus:ring-orange-400 text-sm"
+              className="w-full pl-10 pr-4 py-3 bg-[var(--bg-principal)] rounded-2xl outline-none border border-[var(--borda)] focus:ring-2 focus:ring-[#E67E22] text-sm text-[var(--texto-titulo)]"
             />
           </div>
 
@@ -120,7 +120,7 @@ const ContaModal = ({ conta, onClose, onSuccess }) => {
               placeholder="Categoria *"
               value={form.categoria}
               onChange={handleChange}
-              className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-2xl outline-none ring-1 ring-gray-100 focus:ring-orange-400 text-sm"
+              className="w-full pl-10 pr-4 py-3 bg-[var(--bg-principal)] rounded-2xl outline-none border border-[var(--borda)] focus:ring-2 focus:ring-[#E67E22] text-sm text-[var(--texto-titulo)]"
             />
           </div>
 
@@ -130,7 +130,7 @@ const ContaModal = ({ conta, onClose, onSuccess }) => {
               name="fornecedorId"
               value={form.fornecedorId}
               onChange={handleChange}
-              className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-2xl outline-none ring-1 ring-gray-100 focus:ring-orange-400 text-sm appearance-none"
+              className="w-full pl-10 pr-4 py-3 bg-[var(--bg-principal)] rounded-2xl outline-none border border-[var(--borda)] focus:ring-2 focus:ring-[#E67E22] text-sm text-[var(--texto-titulo)] appearance-none"
             >
               <option value="">Selecionar Fornecedor *</option>
               {fornecedores.map(f => (
@@ -143,7 +143,7 @@ const ContaModal = ({ conta, onClose, onSuccess }) => {
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-4 text-gray-400 font-bold rounded-2xl hover:bg-gray-50"
+            className="flex-1 py-4 text-gray-400 font-bold rounded-2xl hover:bg-[var(--bg-principal)]"
           >
             CANCELAR
           </button>

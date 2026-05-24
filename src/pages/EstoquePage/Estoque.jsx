@@ -1,251 +1,144 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { apiRequest } from "../../services/auth";
-import {
-  Package,
-  Plus,
-  AlertTriangle,
-  History,
-  Search,
-  ArrowUpCircle,
-} from "lucide-react";
+import { Plus, Search } from "lucide-react";
+import EstoqueCard, { calcularStatus } from "./EstoqueCard";
+import EstoqueModal from "./EstoqueModal";
+
+const extrairArray = (data) => {
+  if (Array.isArray(data)) return data;
+  if (data?.content && Array.isArray(data.content)) return data.content;
+  if (data?.data && Array.isArray(data.data)) return data.data;
+  return [];
+};
 
 const Estoque = () => {
   const [itens, setItens] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [prod, setProdutos] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [itemParaEditar, setItemParaEditar] = useState(null);
+  const [opcoes, setOpcoes] = useState({ produtos: [], categorias: [], fornecedores: [] });
 
-  const [novoItem, setNovoItem] = useState({
-    produtoId: "",
-    quantidade: "",
-    minimo: "",
-  });
-
-  const [novoProduto, setNovoProduto] = useState({
-    nome: "",
-    preco: "",
-  });
-
-  const carregarEstoque = async () => {
+  const carregarDados = async () => {
     try {
       setLoading(true);
+      const [resEstoque, resProdutos, resCategorias, resFornecedores] = await Promise.all([
+        apiRequest("/api/estoque").catch(() => null),
+        apiRequest("/api/produtos").catch(() => null),
+        apiRequest("/api/categorias").catch(() => null),
+        apiRequest("/api/fornecedor").catch(() => null),
+      ]);
 
-      const data = await apiRequest("/api/estoque");
-      const prodData = await apiRequest("/api/produtos");
-      setProdutos(prodData || []);
-      setItens(data || []);
+      const estoque = extrairArray(resEstoque).map((e) => ({
+        id: e.id,
+        produtoId: e.produtoId,
+        nomeProduto: e.nomeProduto || "Sem nome",
+        preco: Number(e.preco ?? 0),
+        fornecedor: e.fornecedor || "",
+        quantidade: Number(e.quantidade) || 0,
+        minimo: Number(e.minimo) || 0,
+        status: calcularStatus(e.quantidade, e.minimo),
+      }));
+
+      setItens(estoque);
+      setOpcoes({
+        produtos: extrairArray(resProdutos),
+        categorias: extrairArray(resCategorias),
+        fornecedores: extrairArray(resFornecedores),
+      });
     } catch (err) {
-      console.error("Erro ao carregar estoque:", err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    carregarEstoque();
-  }, []);
+  useEffect(() => { carregarDados(); }, []);
 
-  const handleCadastrar = async (e) => {
-    e.preventDefault();
-    try {
-      await apiRequest("/api/estoque", "POST", {
-        produtoId: parseInt(novoItem.produtoId),
-        quantidade: parseInt(novoItem.quantidade),
-        minimo: parseInt(novoItem.minimo),
-      });
-      setShowModal(false);
-      setNovoItem({ produtoId: "", quantidade: "", minimo: "" });
-      carregarEstoque();
-    } catch (err) {
-      alert(
-        "Erro ao cadastrar. Verifique se o ID do produto existe e se você tem permissão." +
-          " Erro: " +
-          err.message,
-      );
+  const handleEditar = (item) => {
+    setItemParaEditar(item);
+    setShowModal(true);
+  };
+
+  const handleExcluir = async (item) => {
+    if (window.confirm(`Excluir ${item.nomeProduto} do estoque?`)) {
+      try {
+        await apiRequest(`/api/estoque/${item.id}`, "DELETE");
+        carregarDados();
+      } catch (err) {
+        alert("Erro ao excluir item.");
+      }
     }
   };
 
-  const indexarProdutos = new Map(prod.map((p) => [p.id, p]));
-
-  const mergeProdutoInfo = (item, produtos) => ({
-    id: produtos.id,
-    nome: produtos.nome,
-    preco: produtos.preco,
-    quantidade: item.quantidade,
-    minimo: item.minimo,
-    status: item.status,
-    dataUltimaMovimentacao: item.dataUltimaMovimentacao,
-  });
-
-  const resultado = prod
-  .filter(p => indexarProdutos.has(p.id))
-  .map(p => mergeProdutoInfo(p, indexarProdutos.get(p.id)));
+  const itensFiltrados = useMemo(() =>
+    itens.filter(i => i.nomeProduto?.toLowerCase().includes(searchTerm.toLowerCase())),
+    [itens, searchTerm]
+  );
 
   return (
-    <div className="p-8 animate-fadeIn">
+    <div className="p-8 bg-[#F8F9FC] dark:bg-[#0F172A] min-h-screen transition-colors duration-200">
       <header className="flex justify-between items-center mb-10">
         <div>
-          <h2 className="text-3xl font-bold text-[#151D48]">
-            Gestão de Estoque
+          <h2 className="text-3xl font-black text-[#151D48] dark:text-white tracking-tighter uppercase italic transition-colors">
+            Estoque Ó Pai, Ó
           </h2>
-          <p className="text-[#737791]">Controle seus produtos e inventário</p>
+          <p className="text-gray-400 dark:text-slate-400 font-medium transition-colors">
+            Controle de produtos e quantidades
+          </p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
-          className="bg-[#E67E22] text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-[#d35400] transition-all shadow-lg shadow-orange-100"
+          onClick={() => { setItemParaEditar(null); setShowModal(true); }}
+          className="bg-[#E67E22] hover:bg-[#d35400] text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-orange-100 dark:shadow-none"
         >
-          <Plus size={20} />
-          Cadastrar Registro
+          <Plus size={20} /> Novo Registro
         </button>
       </header>
-      <div className="flex gap-4 mb-8">
+
+      <div className="relative mb-8">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={20} />
         <input
           type="text"
-          placeholder="Buscar por produto..."
-          className="flex-1 p-4 bg-[#F0F3F9] rounded-full border-none focus:ring-2 focus:ring-orange-500 outline-none text-[#737791]"
+          placeholder="Buscar produto..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full p-4 pl-12 bg-white dark:bg-[#1E293B] rounded-full border-none shadow-sm focus:ring-2 focus:ring-[#E67E22] outline-none text-[#151D48] dark:text-white placeholder-gray-400 dark:placeholder-slate-500 font-medium transition-all"
         />
-        <button className="bg-[#4079ED] text-white px-6 py-3 rounded-full flex items-center gap-2 hover:bg-[#346ac0] transition-all">
-          <Search size={20} />
-          Buscar
-        </button>
       </div>
 
-      <h1 className="text-2xl font-bold text-[#151D48] mb-6">
-        Produtos({itens.length})
-      </h1>
-
-      <div className="bg-transparent">
-        <table className="w-full text-left">
-          <tbody className="divide-y divide-gray-50">
-            {loading ? (
-              <tr>
-                <td colSpan="5" className="p-10 text-center text-gray-400">
-                  Buscando dados no servidor...
-                </td>
-              </tr>
-            ) : (
-              itens.map((item) => (
-                <tr
-                  key={item.id}
-                  className="flex items-center justify-between bg-white p-4 rounded-4xl shadow-2xl border border-gray-1 mb-7"
-                >
-                  <td className="p-2 font-bold text-[#151D48]">
-                    <div className="flex items-center gap-4">
-                      {item.nomeProduto}
-                    </div>
-                    <div className="flex items-center gap-4 mt-2">
-                      <div className="text-xs text-gray-400 font-medium">
-                        {" "}
-                        Estoque: {item.quantidade}
-                      </div>
-                      <div className="text-xs text-gray-400 font-medium">
-                        {" "}
-                        Mínimo: {item.minimo}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-6 text-lg font-bold text-[#151D48]">
-                    R$ {item.preco?.toFixed(2)}
-                  </td>
-                  <td className="p-6">
-                    {item.status === "BAIXO" || item.status === "CRITICO" ? (
-                      <span className="bg-orange-50 text-orange-600 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-fit">
-                        <AlertTriangle size={12} /> {item.status}
-                      </span>
-                    ) : item.status === "ESGOTADO" ? (
-                      <span className="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold w-fit">
-                        ESGOTADO
-                      </span>
-                    ) : (
-                      <span className="bg-green-50 text-green-600 px-3 py-1 rounded-full text-xs font-bold w-fit">
-                        NORMAL
-                      </span>
-                    )}
-                  </td>
-                  <td className="p-6 text-xs text-gray-400">
-                    {new Date(item.dataUltimaMovimentacao).toLocaleString(
-                      "pt-BR",
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="space-y-4">
+        {loading ? (
+          <p className="text-center text-gray-400 dark:text-slate-500 py-10 font-bold animate-pulse">
+            Carregando...
+          </p>
+        ) : itensFiltrados.length === 0 ? (
+          <div className="text-center py-20 bg-white dark:bg-[#1E293B] rounded-[32px] border border-dashed border-gray-300 dark:border-slate-700 transition-colors">
+            <p className="text-gray-400 dark:text-slate-500 font-bold">
+              Nenhum item encontrado no estoque.
+            </p>
+          </div>
+        ) : (
+          itensFiltrados.map((item) => (
+            <EstoqueCard 
+              key={item.id} 
+              item={item} 
+              onEditar={handleEditar} 
+              onExcluir={handleExcluir} 
+            />
+          ))
+        )}
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white p-8 rounded-[30px] w-full max-w-md shadow-2xl">
-            <h3 className="text-2xl font-bold text-[#151D48] mb-6">
-              Novo Registro de Estoque
-            </h3>
-            <form onSubmit={handleCadastrar} className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-gray-400 ml-2 uppercase">
-                  ID do Produto
-                </label>
-                <input
-                  type="number"
-                  required
-                  className="w-full p-4 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-orange-500 outline-none"
-                  value={novoItem.produtoId}
-                  onChange={(e) =>
-                    setNovoItem({ ...novoItem, produtoId: e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-bold text-gray-400 ml-2 uppercase">
-                    Qtd. Inicial
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    className="w-full p-4 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-orange-500 outline-none"
-                    value={novoItem.quantidade}
-                    onChange={(e) =>
-                      setNovoItem({ ...novoItem, quantidade: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-400 ml-2 uppercase">
-                    Qtd. Mínima
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    className="w-full p-4 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-orange-500 outline-none"
-                    value={novoItem.minimo}
-                    onChange={(e) =>
-                      setNovoItem({ ...novoItem, minimo: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="flex gap-4 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 p-4 text-gray-400 font-bold"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 p-4 bg-[#E67E22] text-white font-bold rounded-2xl"
-                >
-                  Salvar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <EstoqueModal
+          opcoes={opcoes}
+          itemParaEditar={itemParaEditar}
+          onClose={() => { setShowModal(false); setItemParaEditar(null); }}
+          onSucesso={carregarDados}
+        />
       )}
     </div>
   );
 };
 
-export default Estoque;
+export default Estoque; 

@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react'; 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/authContext.jsx';
 import Login from './pages/LoginPage/login.jsx';
@@ -9,38 +10,69 @@ import Comandas from './pages/ComandasPage/Comandas';
 import Vendas from './pages/VendasPage/Vendas.jsx';
 import Fornecedores from './pages/FornecedoresPage/Fornecedores.jsx';
 import ContasReceber from './pages/ContasReceberPage/ContasReceber.jsx';
+import Relatorios from './pages/RelatoriosPage/Relatorios.jsx';
+import ProtectedRoute from "./components/ProtectedRoute";
+import Usuarios from "./pages/Usuarios/Usuarios.jsx";
+import Perfil from "./pages/PerfilPage/Perfil.jsx";
+import Configuracoes from './pages/Configuracoes/Configuracoes.jsx';
+import RedefinirSenha from './pages/LoginPage/RedefinirSenha.jsx';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  const savedUser = localStorage.getItem('user');
-  if (loading) return null; 
+  const savedUser = localStorage.getItem('usuario');
+  
+  if (loading) return <div className="flex items-center justify-center h-screen">Carregando...</div>; 
   if (user || savedUser) return children;
+  
   return <Navigate to="/login" replace />;
 };
 
 function App() {
+  
+  useEffect(() => {
+    const temaSalvo = localStorage.getItem('app-theme') || 'orange';
+    document.documentElement.setAttribute('data-theme', temaSalvo);
+  }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>
         <Routes>
           
           <Route path="/login" element={<Login />} />
+          <Route path="/redefinir-senha" element={<RedefinirSenha />} />
           
           
-          <Route 
-            element={
+          <Route
+            element = {
               <PrivateRoute>
                 <Layout />
               </PrivateRoute>
             }
           >
             <Route path="/home" element={<Home />} />
-            <Route path="/estoque" element={<Estoque />} />
+            <Route path="/estoque" element={<ProtectedRoute><Estoque /></ProtectedRoute>} />
+            <Route path="/comandas" element={<ProtectedRoute><Comandas /></ProtectedRoute>} />
+            <Route path="/vendas" element={<ProtectedRoute><Vendas /></ProtectedRoute>} />
             <Route path="/contas-pagar" element={<ContasPagar />} />
-            <Route path="/comandas" element={<Comandas />} />
-            <Route path="vendas" element={<Vendas />} />
-            <Route path="fornecedores" element={<Fornecedores />} />
-            <Route path="contas-receber" element={<ContasReceber />} />
+            <Route path="/fornecedores" element={<Fornecedores />} />
+            <Route path="/contas-receber" element={<ContasReceber />} />
+
+            
+            <Route path="/perfil" element={<Perfil />} />
+            <Route path="/configuracoes" element={<Configuracoes />} />
+
+            <Route path="/relatorios" element={
+              <ProtectedRoute perfisPermitidos={["ADMIN", "GERENTE"]}>
+                <Relatorios />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/usuarios" element={
+              <ProtectedRoute perfisPermitidos={["ADMIN"]}>
+                <Usuarios />
+              </ProtectedRoute>
+            } />
           </Route>
 
           
