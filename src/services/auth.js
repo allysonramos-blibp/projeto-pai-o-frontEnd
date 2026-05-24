@@ -1,12 +1,10 @@
-const API_URL = 'https://o-pai-o-api.onrender.com';
+const API_URL = 'http://localhost:8080';
 
 export const loginUser = async (username, password) => {
   try {
     const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         login: username,  
         senha: password 
@@ -16,12 +14,11 @@ export const loginUser = async (username, password) => {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || data.error || 'Erro ao fazer login');
+      throw new Error(data.message || 'Erro ao fazer login');
     }
-    return {
-      token: data.token || data.accessToken,
-      user: data.user || data.usuario
-    };
+
+    
+    return data; 
   } catch (error) {
     console.error('Erro no login:', error);
     throw error;
@@ -51,13 +48,13 @@ export const getUserInfo = async (token) => {
   }
 };
 
-/**
- * Faz requisições autenticadas para sua API
- */
+
+ 
 export const apiRequest = async (endpoint, method = 'GET', body = null) => {
   const token = localStorage.getItem('token');
   
   if (!token) {
+    console.error('Token não encontrado no localStorage');
     throw new Error('Não autenticado');
   }
 
@@ -73,12 +70,25 @@ export const apiRequest = async (endpoint, method = 'GET', body = null) => {
     options.body = JSON.stringify(body);
   }
 
-  const response = await fetch(`${API_URL}${endpoint}`, options);
-  const data = await response.json();
+  try {
+    const response = await fetch(`${API_URL}${endpoint}`, options);
 
-  if (!response.ok) {
-    throw new Error(data.message || 'Erro na requisição');
+    
+    if (response.status === 403) {
+      console.warn(`Acesso negado (403) para o endpoint: ${endpoint}. Verifique as Roles do usuário.`);
+      return null; 
+    }
+
+    
+    const data = response.status !== 204 ? await response.json() : null;
+
+    if (!response.ok) {
+      throw new Error(data?.message || 'Erro na requisição');
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`Erro na requisição ${endpoint}:`, error);
+    return null; 
   }
-
-  return data;
 };

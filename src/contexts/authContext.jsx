@@ -1,76 +1,85 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { loginUser, getUserInfo } from '../services/auth';
+import { loginUser } from '../services/auth';
 
 const AuthContext = createContext();
-
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
+  
   useEffect(() => {
-    const initAuth = async () => {
-      const token = localStorage.getItem('token');
-      
-      if (token) {
-        try {
-          const userData = await getUserInfo(token);
-          setUser(userData);
-        } catch (err) {
-          console.error('Token inválido:', err);
-          localStorage.removeItem('token');
-          setUser(null);
-        }
-      }
-      
-      setLoading(false);
-    };
+    const initAuth = () => {
+      try {
+        const token = localStorage.getItem('token');
+        const storageUser = localStorage.getItem('user');
 
+        
+        if (!token || storageUser === "undefined" || !storageUser) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+        } else {
+          
+          setUser(JSON.parse(storageUser));
+        }
+      } catch (err) {
+        console.error("Erro ao carregar sessão guardada:", err);
+        localStorage.clear();
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
     initAuth();
   }, []);
 
+  
   const login = async (username, password) => {
-    setError(null);
-    setLoading(true);
-    
     try {
-      const { token, user: userData } = await loginUser(username, password);
-
-      localStorage.setItem('token', token);
       
-      setUser(userData);
+      const data = await loginUser(username, password);
       
-      return { success: true };
-    } catch (err) {
-      setError(err.message);
-      return { 
-        success: false, 
-        error: err.message || 'Falha na autenticação' 
+      
+      const userData = {
+        id: data.id,
+        nome: data.nome,
+        perfil: data.perfil
       };
-    } finally {
-      setLoading(false);
+
+      const token = data.token;
+
+      
+      if (token && userData.id) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        setUser(userData);
+        return { success: true };
+      } else {
+        throw new Error("Resposta do servidor inválida.");
+      }
+
+    } catch (err) {
+      console.error("Erro no processo de login:", err);
+      const message = err.response?.data?.message || err.message || 'Erro ao entrar';
+      return { success: false, error: message };
     }
   };
 
+  
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setUser(null);
-  };
-
-  const value = {
-    user,
-    login,
-    logout,
-    loading,
-    error,
-    isAuthenticated: !!user
+    
+    window.location.href = '/'; 
   };
 
   return (
-    <AuthContext.Provider value={value}>
-      {children}
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
