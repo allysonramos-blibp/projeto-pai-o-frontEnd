@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8080'
+    baseURL: '/'
 });
 
 api.interceptors.request.use((config) => {
@@ -16,19 +16,29 @@ api.interceptors.request.use((config) => {
 
 export const apiRequest = async (endpoint, method = 'GET', data = null) => {
     try {
-        const response = await api({
+        const config = {
             url: endpoint,
-            method: method,
-            data: data
-        });
+            method: method
+        };
+
+    
+        if (data && ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase())) {
+            config.data = data;
+        }
+
+        const response = await api(config);
         return response.data;
     } catch (error) {
+        
+        console.error("Erro na requisição API:", error);
+
         let message = "Erro ao processar solicitação";
         
         if (error.response && error.response.data) {
+            
             message = typeof error.response.data === 'string' 
                 ? error.response.data 
-                : (error.response.data.message || message);
+                : (error.response.data.mensagem || error.response.data.message || message);
         } else {
             message = error.message;
         }
