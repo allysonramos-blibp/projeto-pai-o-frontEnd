@@ -1,84 +1,67 @@
-const API_URL = 'https://o-pai-o-api.onrender.com';
+import axios from 'axios';
 
-export const loginUser = async (username, password) => {
-  try {
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        login: username,  
-        senha: password 
-      }),
-    });
+const api = axios.create({
+    baseURL: '/'
+});
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || data.error || 'Erro ao fazer login');
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
     }
-    return {
-      token: data.token || data.accessToken,
-      user: data.user || data.usuario
-    };
-  } catch (error) {
-    console.error('Erro no login:', error);
-    throw error;
-  }
-};
+    return config;
+}, (error) => {
+    return Promise.reject(error);
+});
 
+export const apiRequest = async (endpoint, method = 'GET', data = null) => {
+    try {
+        const config = {
+            url: endpoint,
+            method: method
+        };
 
-export const getUserInfo = async (token) => {
-  try {
-    const response = await fetch(`${API_URL}/usuarios`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    
+        if (data && ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase())) {
+            config.data = data;
+        }
 
-    if (!response.ok) {
-      throw new Error('Token inválido ou expirado');
+        const response = await api(config);
+        return response.data;
+    } catch (error) {
+        
+        console.error("Erro na requisição API:", error);
+
+        let message = "Erro ao processar solicitação";
+        
+        if (error.response && error.response.data) {
+            
+            message = typeof error.response.data === 'string' 
+                ? error.response.data 
+                : (error.response.data.mensagem || error.response.data.message || message);
+        } else {
+            message = error.message;
+        }
+
+        throw new Error(message);
     }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Erro ao buscar usuário:', error);
-    throw error;
-  }
 };
 
-/**
- * Faz requisições autenticadas para sua API
- */
-export const apiRequest = async (endpoint, method = 'GET', body = null) => {
-  const token = localStorage.getItem('token');
-  
-  if (!token) {
-    throw new Error('Não autenticado');
-  }
 
-  const options = {
-    method,
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  };
-
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
-
-  const response = await fetch(`${API_URL}${endpoint}`, options);
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || 'Erro na requisição');
-  }
-
-  return data;
+export const loginUser = async ({ login, senha }) => {
+    const response = await api.post('/auth/login', { login, senha });
+    const { token, usuario } = response.data;
+    
+    localStorage.setItem('token', token);
+    localStorage.setItem('usuario', JSON.stringify(usuario));
+    
+    return response.data;
 };
+
+export const logoutUser = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    window.location.href = '/login';
+};
+
+export default api;

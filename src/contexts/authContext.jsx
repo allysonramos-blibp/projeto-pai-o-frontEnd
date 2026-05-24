@@ -1,76 +1,77 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { loginUser, getUserInfo } from '../services/auth';
+import { loginUser } from '../services/auth';
 
 const AuthContext = createContext();
-
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  
+  const [tema, setTema] = useState(localStorage.getItem('app-theme') || 'orange');
 
+  
   useEffect(() => {
-    const initAuth = async () => {
-      const token = localStorage.getItem('token');
-      
-      if (token) {
-        try {
-          const userData = await getUserInfo(token);
-          setUser(userData);
-        } catch (err) {
-          console.error('Token inválido:', err);
-          localStorage.removeItem('token');
-          setUser(null);
-        }
-      }
-      
-      setLoading(false);
-    };
+    document.documentElement.setAttribute('data-theme', tema);
+  }, [tema]);
 
+  useEffect(() => { 
+    const initAuth = () => {
+      try {
+        const token = localStorage.getItem('token');
+        const storageUser = localStorage.getItem('usuario');
+
+        if (!token || !storageUser || storageUser === "undefined") {
+          // Apenas remove os dados de auth, preservando o tema
+          localStorage.removeItem('token');
+          localStorage.removeItem('usuario');
+          setUser(null);
+        } else {
+          setUser(JSON.parse(storageUser));
+        }
+      } catch (err) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('usuario');
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
     initAuth();
   }, []);
 
   const login = async (username, password) => {
-    setError(null);
-    setLoading(true);
-    
     try {
-      const { token, user: userData } = await loginUser(username, password);
+      const data = await loginUser({ 
+        login: username.trim(), 
+        senha: password 
+      });
+      
+      const userData = data.usuario || data; 
 
-      localStorage.setItem('token', token);
-      
-      setUser(userData);
-      
-      return { success: true };
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('usuario', JSON.stringify(userData));
+        setUser(userData);
+        return { success: true };
+      }
+      throw new Error("Token não recebido do servidor");
     } catch (err) {
-      setError(err.message);
-      return { 
-        success: false, 
-        error: err.message || 'Falha na autenticação' 
-      };
-    } finally {
-      setLoading(false);
+      return { success: false, error: err.message || "Usuário ou senha inválidos" };
     }
   };
 
   const logout = () => {
+    
     localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
     setUser(null);
-  };
-
-  const value = {
-    user,
-    login,
-    logout,
-    loading,
-    error,
-    isAuthenticated: !!user
+    window.location.href = '/login';
   };
 
   return (
-    <AuthContext.Provider value={value}>
-      {children}
+    <AuthContext.Provider value={{ user, login, logout, loading, tema, setTema }}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
