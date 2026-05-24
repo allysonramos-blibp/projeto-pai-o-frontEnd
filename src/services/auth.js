@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8080';
+const API_URL = 'https://o-pai-o.onrender.com';
 
 export const loginUser = async (username, password) => {
   try {
