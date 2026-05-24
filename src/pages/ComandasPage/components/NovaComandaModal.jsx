@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { apiRequest } from '../../../services/auth';
+import { X, User, Hash } from 'lucide-react';
 
 const NovaComandaModal = ({ onClose, onSuccess, usuarioId }) => {
   const [nome, setNome] = useState('');
   const [mesa, setMesa] = useState('');
 
   const handleSalvar = async () => {
-    if (!mesa) return alert("Número da mesa é obrigatório");
+    if (!mesa) return alert('Número da mesa é obrigatório');
     try {
       await apiRequest('/api/comandas', 'POST', {
         nomeCliente: nome,
@@ -16,47 +17,63 @@ const NovaComandaModal = ({ onClose, onSuccess, usuarioId }) => {
       });
       onSuccess();
       onClose();
-    } catch (err) {
-      alert("Erro ao abrir comanda");
+    } catch {
+      alert('Erro ao abrir comanda');
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-colors">
-      <div className="bg-white dark:bg-[#111827] rounded-[32px] w-full max-w-md p-8 shadow-2xl animate-scaleIn transition-colors border border-gray-100 dark:border-slate-800">
-        <h2 className="text-2xl font-bold text-[#151D48] dark:text-white mb-6">
-          Abrir Nova Comanda
-        </h2>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl border border-gray-100">
+
         
-        <div className="space-y-4 mb-8">
-          <input
-            type="text"
-            placeholder="Nome do Cliente (Opcional)"
-            className="w-full p-4 bg-gray-50 dark:bg-[#0F172A] rounded-2xl outline-none ring-1 ring-gray-100 dark:ring-slate-700 focus:ring-[#E67E22] dark:text-white placeholder-gray-400 dark:placeholder-slate-500 transition-all"
-            value={nome}
-            onChange={e => setNome(e.target.value)}
-          />
-          <input
-            type="number"
-            placeholder="Número da Mesa"
-            className="w-full p-4 bg-gray-50 dark:bg-[#0F172A] rounded-2xl outline-none ring-1 ring-gray-100 dark:ring-slate-700 focus:ring-[#E67E22] dark:text-white placeholder-gray-400 dark:placeholder-slate-500 transition-all"
-            value={mesa}
-            onChange={e => setMesa(e.target.value)}
-          />
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-lg font-bold text-gray-800">Abrir Nova Comanda</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        <div className="flex gap-4">
-          <button 
-            onClick={onClose} 
-            className="flex-1 py-4 text-gray-400 dark:text-slate-500 font-bold hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
+        
+        <div className="space-y-3 mb-6">
+          <div className="relative">
+            <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Nome do Cliente (Opcional)"
+              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-sm text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all"
+              value={nome}
+              onChange={e => setNome(e.target.value)}
+            />
+          </div>
+          <div className="relative">
+            <Hash size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="number"
+              placeholder="Número da Mesa"
+              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-sm text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all"
+              value={mesa}
+              onChange={e => setMesa(e.target.value)}
+            />
+          </div>
+        </div>
+
+        
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 text-gray-400 font-semibold hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-colors text-sm"
           >
-            CANCELAR
+            Cancelar
           </button>
-          <button 
-            onClick={handleSalvar} 
-            className="flex-1 py-4 bg-[#151D48] dark:bg-[#E67E22] text-white rounded-2xl font-bold hover:opacity-90 transition-opacity"
+          <button
+            onClick={handleSalvar}
+            className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold text-sm transition-colors shadow-md shadow-orange-100"
           >
-            ABRIR MESA
+            Abrir Mesa
           </button>
         </div>
       </div>

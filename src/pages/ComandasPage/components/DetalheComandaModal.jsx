@@ -1,35 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/auth';
 import { useAuth } from '../../../contexts/authContext';
-import { X, Plus, CheckCircle, XCircle, Trash2, Printer, Loader2, Banknote, CreditCard, Smartphone, Wallet, Clock, Calendar, User } from 'lucide-react';
+import {
+  X, Plus, CheckCircle, XCircle, Trash2, Printer,
+  Loader2, Banknote, CreditCard, Smartphone, Wallet,
+  Clock, Calendar, User
+} from 'lucide-react';
+
 
 const ICONE_POR_TIPO = {
   DINHEIRO: Banknote,
   DIGITAL:  Smartphone,
   CARTAO:   CreditCard,
 };
-
-const ICONE_POR_NOME = {
-  'debito': Wallet,
-  'debit':  Wallet,
-};
+const ICONE_POR_NOME = { debito: Wallet, debit: Wallet };
 
 const getIcone = (forma) => {
-  const porNome = Object.entries(ICONE_POR_NOME).find(([key]) =>
+  const match = Object.entries(ICONE_POR_NOME).find(([key]) =>
     forma.nome.toLowerCase().includes(key)
   );
-  if (porNome) return porNome[1];
-  return ICONE_POR_TIPO[forma.tipo] || CreditCard;
+  return match ? match[1] : (ICONE_POR_TIPO[forma.tipo] || CreditCard);
 };
 
 const formatarData = (dataStr) => {
   if (!dataStr) return null;
-  const d = new Date(dataStr);
-  return d.toLocaleString('pt-BR', {
+  return new Date(dataStr).toLocaleString('pt-BR', {
     day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
+    hour: '2-digit', minute: '2-digit',
   });
 };
+
+const formatBRL = (val) =>
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
+
 
 const ModalPagamento = ({ total, onConfirmar, onFechar }) => {
   const [formas, setFormas] = useState([]);
@@ -45,62 +48,64 @@ const ModalPagamento = ({ total, onConfirmar, onFechar }) => {
   }, []);
 
   const handleConfirmar = () => {
-    if (pagarDepois) {
-      onConfirmar({ pagarDepois: true, formaPagamentoId: null });
-    } else if (formaSelecionada) {
-      onConfirmar({ pagarDepois: false, formaPagamentoId: formaSelecionada });
-    }
+    if (pagarDepois) onConfirmar({ pagarDepois: true, formaPagamentoId: null });
+    else if (formaSelecionada) onConfirmar({ pagarDepois: false, formaPagamentoId: formaSelecionada });
   };
 
   const podeConfirmar = pagarDepois || formaSelecionada !== null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-      <div className="bg-[var(--bg-card)] rounded-[32px] w-full max-w-sm p-8 shadow-2xl border border-[var(--borda)]">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-bold text-[var(--texto-titulo)]">Forma de Pagamento</h3>
-          <button onClick={onFechar} className="text-gray-400 hover:text-red-500">
-            <X size={22} />
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+      <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl border border-gray-100">
+
+        
+        <div className="flex justify-between items-center mb-5">
+          <h3 className="text-base font-bold text-gray-800">Forma de Pagamento</h3>
+          <button onClick={onFechar} className="text-gray-400 hover:text-red-500 transition-colors">
+            <X size={20} />
           </button>
         </div>
 
-        <div className="bg-[var(--bg-principal)] rounded-2xl p-4 flex justify-between items-center mb-6 border border-[var(--borda)]">
-          <span className="text-sm text-[var(--texto-corpo)] font-bold uppercase tracking-tight">Total</span>
-          <span className="text-2xl font-black text-teal-400">R$ {total.toFixed(2)}</span>
+        
+        <div className="bg-teal-50 border border-teal-100 rounded-xl p-4 flex justify-between items-center mb-5">
+          <span className="text-xs font-bold uppercase tracking-widest text-teal-600">Total</span>
+          <span className="text-2xl font-black text-teal-600">{formatBRL(total)}</span>
         </div>
 
+        
         <button
           onClick={() => { setPagarDepois(!pagarDepois); setFormaSelecionada(null); }}
-          className={`w-full flex items-center gap-3 p-4 rounded-2xl ring-2 transition-all font-bold text-sm mb-4
-            ${pagarDepois
-              ? 'bg-orange-500/10 text-orange-500 ring-orange-500/20 ring-offset-2'
-              : 'bg-[var(--bg-principal)] text-[var(--texto-corpo)] ring-[var(--borda)] hover:ring-gray-400'
-            }`}
+          className={`w-full flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all font-semibold text-sm mb-4 ${
+            pagarDepois
+              ? 'bg-orange-50 border-orange-400 text-orange-600'
+              : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300'
+          }`}
         >
-          <Clock size={20} />
+          <Clock size={18} />
           Pagar Depois
-          <span className="ml-auto text-xs font-normal opacity-60">Gera conta a receber</span>
+          <span className="ml-auto text-xs font-normal text-gray-400">Gera conta a receber</span>
         </button>
 
+        
         {loading ? (
-          <div className="flex justify-center items-center py-6 text-gray-400">
-            <Loader2 size={24} className="animate-spin" />
+          <div className="flex justify-center py-6 text-gray-400">
+            <Loader2 size={22} className="animate-spin" />
           </div>
         ) : (
-          <div className={`grid grid-cols-2 gap-3 mb-6 transition-opacity ${pagarDepois ? 'opacity-30 pointer-events-none' : 'opacity-100'}`}>
+          <div className={`grid grid-cols-2 gap-3 mb-5 transition-opacity ${pagarDepois ? 'opacity-30 pointer-events-none' : ''}`}>
             {formas.map((forma) => {
               const Icone = getIcone(forma);
               return (
                 <button
                   key={forma.id}
                   onClick={() => setFormaSelecionada(forma.id)}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-2xl ring-2 transition-all font-bold text-sm text-center
-                    ${formaSelecionada === forma.id
-                      ? 'bg-teal-500/10 text-teal-500 ring-teal-500/20 ring-offset-2 scale-95'
-                      : 'bg-[var(--bg-principal)] text-[var(--texto-corpo)] ring-[var(--borda)] hover:ring-gray-400'
-                    }`}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all font-semibold text-sm ${
+                    formaSelecionada === forma.id
+                      ? 'bg-teal-50 border-teal-400 text-teal-600 scale-95'
+                      : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300'
+                  }`}
                 >
-                  <Icone size={22} />
+                  <Icone size={20} />
                   {forma.nome}
                 </button>
               );
@@ -108,18 +113,20 @@ const ModalPagamento = ({ total, onConfirmar, onFechar }) => {
           </div>
         )}
 
+        
         <button
           onClick={handleConfirmar}
           disabled={!podeConfirmar}
-          className="w-full py-4 bg-teal-500 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          className="w-full py-3.5 bg-teal-500 hover:bg-teal-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md shadow-teal-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
         >
-          <CheckCircle size={18} />
-          {pagarDepois ? 'CONFIRMAR — PAGAR DEPOIS' : 'CONFIRMAR PAGAMENTO'}
+          <CheckCircle size={17} />
+          {pagarDepois ? 'Confirmar — Pagar Depois' : 'Confirmar Pagamento'}
         </button>
       </div>
     </div>
   );
 };
+
 
 const DetalheComandaModal = ({ comanda, onClose, refresh }) => {
   const { user } = useAuth();
@@ -149,23 +156,23 @@ const DetalheComandaModal = ({ comanda, onClose, refresh }) => {
     try {
       await apiRequest(`/api/comandas/${comanda.id}/itens`, 'POST', {
         produtoId: parseInt(itemSelecionado),
-        quantidade: parseInt(quantidade)
+        quantidade: parseInt(quantidade),
       });
       setItemSelecionado('');
       setQuantidade(1);
       await atualizarDadosComanda();
-    } catch (err) {
-      alert("Erro ao lançar item.");
+    } catch {
+      alert('Erro ao lançar item.');
     }
   };
 
   const handleRemoverItem = async (itemId) => {
-    if (!window.confirm("Deseja remover este item?")) return;
+    if (!window.confirm('Deseja remover este item?')) return;
     try {
       await apiRequest(`/api/comandas/itens/${itemId}`, 'DELETE');
       await atualizarDadosComanda();
-    } catch (err) {
-      alert("Erro ao remover item.");
+    } catch {
+      alert('Erro ao remover item.');
     }
   };
 
@@ -175,7 +182,6 @@ const DetalheComandaModal = ({ comanda, onClose, refresh }) => {
       await refresh();
       onClose();
     } catch (err) {
-      console.error("Erro ao cancelar comanda:", err);
       alert(`Erro ao cancelar comanda: ${err?.message || 'Verifique o console'}`);
     }
   };
@@ -190,7 +196,6 @@ const DetalheComandaModal = ({ comanda, onClose, refresh }) => {
       await refresh();
       onClose();
     } catch (err) {
-      console.error("Erro ao finalizar comanda:", err);
       alert(`Erro ao finalizar comanda: ${err?.message || 'Verifique o console'}`);
     }
   };
@@ -266,38 +271,46 @@ const DetalheComandaModal = ({ comanda, onClose, refresh }) => {
   return (
     <>
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-[var(--bg-card)] rounded-[32px] w-full max-w-lg p-8 shadow-2xl flex flex-col max-h-[90vh] border border-[var(--borda)]">
+        <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl flex flex-col max-h-[90vh] border border-gray-100">
 
-          <div className="flex justify-between items-start mb-4">
+          
+          <div className="flex justify-between items-start mb-5">
             <div>
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold text-[var(--texto-titulo)]">Mesa {comandaLocal.numeroMesa}</h2>
-                <button onClick={handlePrint} className="p-2 text-gray-400 hover:text-blue-500">
-                  <Printer size={20} />
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-gray-800">Mesa {comandaLocal.numeroMesa}</h2>
+                <button
+                  onClick={handlePrint}
+                  className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                >
+                  <Printer size={17} />
                 </button>
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
                 {comandaLocal.nomeCliente && (
-                  <span className="flex items-center gap-1 text-xs text-[var(--texto-corpo)]">
+                  <span className="flex items-center gap-1 text-xs text-gray-400">
                     <User size={11} /> {comandaLocal.nomeCliente}
                   </span>
                 )}
                 {comandaLocal.dataAbertura && (
-                  <span className="flex items-center gap-1 text-xs text-[var(--texto-corpo)]">
+                  <span className="flex items-center gap-1 text-xs text-gray-400">
                     <Calendar size={11} /> {formatarData(comandaLocal.dataAbertura)}
                   </span>
                 )}
               </div>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-red-500 mt-1">
-              <X size={24} />
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
+            >
+              <X size={20} />
             </button>
           </div>
 
+          
           {isAberta ? (
-            <div className="bg-[var(--bg-principal)] p-4 rounded-2xl mb-6 flex gap-2 border border-[var(--borda)]">
+            <div className="bg-gray-50 border border-gray-200 p-3 rounded-xl mb-5 flex gap-2">
               <select
-                className="flex-1 p-2 bg-[var(--bg-card)] rounded-xl text-sm border border-[var(--borda)] outline-none text-[var(--texto-titulo)]"
+                className="flex-1 p-2 bg-white rounded-lg text-sm border border-gray-200 outline-none text-gray-700 focus:ring-2 focus:ring-orange-400 transition"
                 value={itemSelecionado}
                 onChange={e => setItemSelecionado(e.target.value)}
               >
@@ -306,65 +319,76 @@ const DetalheComandaModal = ({ comanda, onClose, refresh }) => {
               </select>
               <input
                 type="number"
-                className="w-16 p-2 bg-[var(--bg-card)] rounded-xl text-sm border border-[var(--borda)] text-[var(--texto-titulo)]"
+                className="w-16 p-2 bg-white rounded-lg text-sm border border-gray-200 text-gray-700 outline-none focus:ring-2 focus:ring-orange-400 transition"
                 value={quantidade}
                 onChange={e => setQuantidade(e.target.value)}
                 min="1"
               />
-              <button onClick={handleAddProduto} className="bg-[#E67E22] text-white p-2 rounded-xl">
-                <Plus />
+              <button
+                onClick={handleAddProduto}
+                className="bg-orange-500 hover:bg-orange-600 text-white p-2 rounded-lg transition-colors"
+              >
+                <Plus size={18} />
               </button>
             </div>
           ) : (
-            <div className="bg-[var(--bg-principal)] p-4 rounded-2xl mb-6 text-center text-[var(--texto-corpo)] text-sm font-bold border border-dashed border-[var(--borda)] uppercase">
+            <div className="bg-gray-50 border border-dashed border-gray-200 p-3 rounded-xl mb-5 text-center text-gray-400 text-xs font-bold uppercase tracking-widest">
               Comanda {comandaLocal.status}
             </div>
           )}
 
-          <div className="flex-1 overflow-y-auto space-y-3 mb-6 pr-2">
-            <p className="text-[10px] font-bold text-[var(--texto-corpo)] uppercase tracking-widest">Itens Lançados</p>
+          
+          <div className="flex-1 overflow-y-auto space-y-2 mb-5 pr-1">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Itens Lançados</p>
+
             {comandaLocal.itens && comandaLocal.itens.length > 0 ? (
               comandaLocal.itens.map((item, i) => (
-                <div key={i} className="flex justify-between items-center p-3 bg-[var(--bg-principal)] rounded-xl border border-[var(--borda)]">
+                <div
+                  key={i}
+                  className="flex justify-between items-center p-3 bg-gray-50 rounded-xl border border-gray-100"
+                >
                   <div>
-                    <p className="text-sm font-bold text-[var(--texto-titulo)]">{item.nomeProduto || 'Produto'}</p>
-                    <p className="text-xs text-[var(--texto-corpo)]">{item.quantidade || 0} unidades</p>
+                    <p className="text-sm font-semibold text-gray-800">{item.nomeProduto || 'Produto'}</p>
+                    <p className="text-xs text-gray-400">{item.quantidade || 0} unidades</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="font-bold text-teal-500 text-sm">
-                      R$ {(item.subtotal || 0).toFixed(2)}
-                    </span>
+                    <span className="font-bold text-teal-600 text-sm">{formatBRL(item.subtotal)}</span>
                     {isAberta && (
-                      <button onClick={() => handleRemoverItem(item.id)} className="text-red-400 hover:text-red-500">
-                        <Trash2 size={16} />
+                      <button
+                        onClick={() => handleRemoverItem(item.id)}
+                        className="text-gray-300 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 size={15} />
                       </button>
                     )}
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-center text-[var(--texto-corpo)] text-xs py-4">Nenhum item na conta.</p>
+              <p className="text-center text-gray-400 text-xs py-6">Nenhum item na conta.</p>
             )}
           </div>
 
-          <div className="bg-[var(--bg-principal)] p-5 rounded-2xl text-[var(--texto-titulo)] flex justify-between items-center mb-6 border border-[var(--borda)]">
-            <span className="text-sm opacity-60 font-bold uppercase tracking-tighter">Total Acumulado</span>
-            <span className="text-2xl font-black text-teal-400">R$ {(comandaLocal.valorTotal || 0).toFixed(2)}</span>
+          
+          <div className="bg-teal-50 border border-teal-100 p-4 rounded-xl flex justify-between items-center mb-5">
+            <span className="text-xs font-bold uppercase tracking-widest text-teal-600">Total Acumulado</span>
+            <span className="text-2xl font-black text-teal-600">{formatBRL(comandaLocal.valorTotal)}</span>
           </div>
 
+          
           {isAberta && (
             <div className="flex gap-3">
               <button
                 onClick={handleCancelar}
-                className="flex-1 py-4 bg-red-500/10 text-red-500 rounded-2xl font-bold flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl font-bold flex items-center justify-center gap-2 border border-red-100 transition-colors text-sm"
               >
-                <XCircle size={18} /> CANCELAR
+                <XCircle size={17} /> Cancelar
               </button>
               <button
                 onClick={() => setShowPagamento(true)}
-                className="flex-1 py-4 bg-teal-500 text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20"
+                className="flex-1 py-3 bg-teal-500 hover:bg-teal-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md shadow-teal-200 transition-colors text-sm"
               >
-                <CheckCircle size={18} /> FINALIZAR
+                <CheckCircle size={17} /> Finalizar
               </button>
             </div>
           )}
