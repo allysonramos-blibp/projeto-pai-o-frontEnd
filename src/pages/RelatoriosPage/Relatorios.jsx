@@ -6,6 +6,7 @@ import {
 } from 'recharts';
 import {
     TrendingUp, DollarSign, Package, ShoppingBag,
+    AlertCircle, CheckCircle, Clock
 } from 'lucide-react';
 
 const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
@@ -15,14 +16,14 @@ const formatBRL = (val) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
 const KPICard = ({ label, value, icon, color, sub }) => (
-    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
-        <div className={`p-3 rounded-xl bg-gray-50 ${color}`}>
-            {React.cloneElement(icon, { size: 22 })}
+    <div className="bg-white dark:bg-[#111827] p-6 rounded-[28px] shadow-sm border border-gray-100 dark:border-slate-800 flex items-center gap-4 transition-colors">
+        <div className={`p-4 rounded-2xl bg-gray-50 dark:bg-[#0F172A] ${color}`}>
+            {React.cloneElement(icon, { size: 24 })}
         </div>
         <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{label}</p>
-            <h3 className="text-xl font-black text-gray-800">{value}</h3>
-            {sub && <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>}
+            <p className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider">{label}</p>
+            <h3 className="text-2xl font-black text-[#151D48] dark:text-white">{value}</h3>
+            {sub && <p className="text-xs text-gray-400 dark:text-slate-600 mt-0.5">{sub}</p>}
         </div>
     </div>
 );
@@ -30,9 +31,9 @@ const KPICard = ({ label, value, icon, color, sub }) => (
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white rounded-xl shadow-lg border border-gray-100 px-4 py-3">
+            <div className="bg-white dark:bg-[#1E293B] rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 px-4 py-3">
                 <p className="text-xs font-bold text-gray-400 mb-1">{label}</p>
-                <p className="text-base font-black text-gray-800">{formatBRL(payload[0].value)}</p>
+                <p className="text-base font-black text-[#151D48] dark:text-white">{formatBRL(payload[0].value)}</p>
             </div>
         );
     }
@@ -40,6 +41,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const Relatorios = () => {
+    
     const [loading, setLoading] = useState(true);
     const [comandas, setComandas] = useState([]);
     const [produtos, setProdutos] = useState([]);
@@ -131,48 +133,64 @@ const Relatorios = () => {
         ];
     }, [contasPagar, contasReceber]);
 
+    const topProdutos = useMemo(() => {
+        const mapa = {};
+        comandas.forEach(c => {
+            (c.itens || []).forEach(item => {
+                const nome = item.nomeProduto || 'Desconhecido';
+                if (!mapa[nome]) mapa[nome] = { total: 0, qtd: 0 };
+                mapa[nome].total += parseFloat(item.subtotal) || 0;
+                mapa[nome].qtd += item.quantidade || 0;
+            });
+        });
+        return Object.entries(mapa)
+            .map(([nome, d]) => ({ nome, total: d.total, qtd: d.qtd }))
+            .sort((a, b) => b.total - a.total)
+            .slice(0, 5);
+    }, [comandas]);
+
     if (loading) return (
-        <div className="p-10 flex items-center justify-center min-h-screen bg-gray-50">
-            <p className="text-gray-400 font-semibold animate-pulse">Carregando relatórios...</p>
+        <div className="p-10 flex items-center justify-center min-h-screen dark:bg-[#0F172A]">
+            <p className="text-gray-400 font-bold animate-pulse">Carregando relatórios...</p>
         </div>
     );
 
     return (
-        <div className="p-8 bg-gray-50 min-h-screen space-y-6">
+        <div className="p-8 bg-[#F8F9FA] dark:bg-[#0F172A] min-h-screen space-y-8 transition-colors">
             <header>
-                <h2 className="text-2xl font-black text-gray-900 tracking-tight">Relatório</h2>
-                <p className="text-gray-400 text-sm mt-0.5">Análise de desempenho e estatísticas</p>
+                <h2 className="text-3xl font-black text-[#151D48] dark:text-white">Relatório</h2>
+                <p className="text-gray-500 dark:text-slate-400 font-medium">Análise de Desempenho e Estatística</p>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <KPICard label="Receita Total" value={formatBRL(kpis.receitaTotal)} icon={<DollarSign />} color="text-emerald-600" sub="Comandas finalizadas" />
                 <KPICard label="Ticket Médio" value={formatBRL(kpis.ticketMedio)} icon={<TrendingUp />} color="text-blue-600" sub={`${kpis.totalComandas} comandas`} />
                 <KPICard label="Produtos Cadastrados" value={kpis.totalProdutos} icon={<Package />} color="text-purple-600" sub="No catálogo" />
                 <KPICard label="Comandas Finalizadas" value={kpis.totalComandas} icon={<ShoppingBag />} color="text-orange-600" sub="Total histórico" />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 className="text-base font-bold text-gray-800 mb-5">Receita por Dia da Semana</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="bg-white dark:bg-[#111827] p-6 rounded-[32px] shadow-sm border border-gray-100 dark:border-slate-800 transition-colors">
+                    <h3 className="text-lg font-bold text-[#151D48] dark:text-white mb-6">Receita por Dia da Semana</h3>
                     <div className="h-[260px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={dadosLinha}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 12 }} dy={10} />
                                 <YAxis hide />
                                 <Tooltip content={<CustomTooltip />} />
-                                <Line type="monotone" dataKey="valor" stroke="#F97316" strokeWidth={3} dot={{ r: 5, fill: '#F97316', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 8 }} />
+                                <Line type="monotone" dataKey="valor" stroke="#E67E22" strokeWidth={3} dot={{ r: 5, fill: '#E67E22', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 8 }} />
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 className="text-base font-bold text-gray-800 mb-5">Receita dos Últimos 6 Meses</h3>
+                <div className="bg-white dark:bg-[#111827] p-6 rounded-[32px] shadow-sm border border-gray-100 dark:border-slate-800 transition-colors">
+                    <h3 className="text-lg font-bold text-[#151D48] dark:text-white mb-6">Receita dos Últimos 6 Meses</h3>
                     <div className="h-[260px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={dadosMeses} barCategoryGap="40%">
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 11 }} />
                                 <YAxis hide />
                                 <Tooltip content={<CustomTooltip />} />
@@ -183,9 +201,9 @@ const Relatorios = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 className="text-base font-bold text-gray-800 mb-5">Formas de Pagamento</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="bg-white dark:bg-[#111827] p-6 rounded-[32px] shadow-sm border border-gray-100 dark:border-slate-800 transition-colors">
+                    <h3 className="text-lg font-bold text-[#151D48] dark:text-white mb-6">Formas de Pagamento</h3>
                     <div className="h-[260px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -199,19 +217,19 @@ const Relatorios = () => {
                     </div>
                 </div>
 
-                <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 className="text-base font-bold text-gray-800 mb-2">Contas a Pagar vs Receber</h3>
-                    <div className="flex gap-4 mb-4 text-xs text-gray-400">
-                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block" /> Pendente</span>
-                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-teal-500 inline-block" /> Pago/Recebido</span>
+                <div className="lg:col-span-2 bg-white dark:bg-[#111827] p-6 rounded-[32px] shadow-sm border border-gray-100 dark:border-slate-800 transition-colors">
+                    <h3 className="text-lg font-bold text-[#151D48] dark:text-white mb-2">Contas a Pagar vs Receber</h3>
+                    <div className="flex gap-4 mb-4 text-sm dark:text-slate-400">
+                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-orange-400" /> Pendente</span>
+                        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-teal-500" /> Pago/Recebido</span>
                     </div>
                     <div className="h-[200px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={dadosContas} barCategoryGap="40%">
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94A3B8', fontSize: 12 }} />
                                 <YAxis hide />
-                                <Tooltip formatter={(v) => formatBRL(v)} contentStyle={{ borderRadius: '12px', border: '1px solid #F1F5F9' }} />
+                                <Tooltip formatter={(v) => formatBRL(v)} contentStyle={{ borderRadius: '16px' }} />
                                 <Bar dataKey="pendente" fill="#F59E0B" radius={[8, 8, 0, 0]} name="Pendente" />
                                 <Bar dataKey="pago" fill="#10B981" radius={[8, 8, 0, 0]} name="Pago/Recebido" />
                             </BarChart>

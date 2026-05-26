@@ -41,10 +41,10 @@ const Layout = () => {
   const visibleMenuItems = menuItems.filter(item => item.roles.includes(userRole));
 
   return (
-    // 1. Fundo principal da aplicação dinâmico
+    
     <div className="flex min-h-screen bg-[var(--bg-principal)] transition-colors duration-200">
       
-      {/* SIDEBAR */}
+      
       <aside className="w-64 bg-[var(--bg-card)] border-r border-[var(--borda)] flex flex-col p-6 fixed h-full z-30 transition-colors duration-200">
         <div className="flex items-center gap-3 mb-10 px-2">
           <div className="bg-[#E67E22] p-2 rounded-xl">
@@ -82,23 +82,23 @@ const Layout = () => {
         </button>
       </aside>
 
-      {/* CONTEÚDO DIREITA */}
+      
       <div className="flex-1 ml-64 flex flex-col">
         
-        {/* HEADER */}
+        
         <header className="h-20 bg-[var(--bg-card)] border-b border-[var(--borda)] flex items-center justify-between px-8 sticky top-0 z-20 transition-colors duration-200">
           <h2 className="text-[var(--texto-titulo)] font-bold text-xl uppercase tracking-tight transition-colors duration-200">
             {menuItems.find(i => i.path === location.pathname)?.label || "Sistema"}
           </h2>
 
           <div className="flex items-center gap-6">
-            {/* ÍCONE DE NOTIFICAÇÕES */}
+            
             <button className="p-2 text-[var(--texto-corpo)] hover:bg-[var(--bg-principal)] rounded-full relative transition-colors duration-200">
               <Bell size={20} />
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-[var(--bg-card)]"></span>
             </button>
 
-            {/* DROPDOWN DE PERFIL */}
+            
             <div className="relative" ref={dropdownRef}>
               <div 
                 className="flex items-center gap-3 cursor-pointer p-1.5 hover:bg-[var(--bg-principal)] rounded-2xl transition-all duration-200"
@@ -116,7 +116,7 @@ const Layout = () => {
                 <ChevronDown size={16} className={`text-[var(--texto-corpo)] transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
               </div>
 
-              {/* MENU DO DROPDOWN */}
+              
               {isProfileOpen && (
                 <div className="absolute right-0 mt-3 w-56 bg-[var(--bg-card)] rounded-2xl shadow-xl border border-[var(--borda)] py-2 animate-fadeIn transition-colors duration-200">
                   <div className="px-4 py-3 border-b border-[var(--borda)] mb-1">
@@ -151,7 +151,7 @@ const Layout = () => {
           </div>
         </header>
 
-        {/* ÁREA DE CONTEÚDO DAS PÁGINAS FILHAS */}
+        
         <main className="p-8 flex-1 bg-[var(--bg-principal)] text-[var(--texto-corpo)] transition-colors duration-200">
           <Outlet />
         </main>
