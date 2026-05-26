@@ -4,31 +4,29 @@ import { useAuth } from "../../contexts/authContext";
 import { Trash2, UserPlus, RefreshCw, Search, Pencil, X } from "lucide-react";
 
 const PERFIL_CFG = {
-  ADMIN:   { cls: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300", label: "ADMIN" },
-  GERENTE: { cls: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",        label: "GERENTE" },
-  USUARIO: { cls: "bg-gray-200 text-gray-600 dark:bg-gray-800 dark:text-gray-400",           label: "USUÁRIO" },
+  ADMIN:   { cls: "bg-purple-100 text-purple-700", label: "ADMIN"   },
+  GERENTE: { cls: "bg-blue-100 text-blue-700",     label: "GERENTE" },
+  USUARIO: { cls: "bg-gray-100 text-gray-600",     label: "USUÁRIO" },
 };
 
 const PerfilBadge = ({ perfil }) => {
   const cfg = PERFIL_CFG[perfil] || PERFIL_CFG.USUARIO;
   return (
-    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-colors ${cfg.cls}`}>
+    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${cfg.cls}`}>
       {cfg.label}
     </span>
   );
 };
 
+const inputClass = "w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-400 text-sm font-medium text-gray-700 placeholder-gray-400 transition-all";
+
 const Modal = ({ titulo, onClose, children }) => (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-    <div className="bg-white dark:bg-[#1E293B] rounded-[32px] w-full max-w-sm shadow-2xl p-8 relative border border-gray-200 dark:border-slate-700/50">
-      <button
-        onClick={onClose}
-        className="absolute right-6 top-6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-        type="button"
-      >
-        <X size={20} />
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+    <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 relative border border-gray-100">
+      <button onClick={onClose} className="absolute right-5 top-5 text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors" type="button">
+        <X size={18} />
       </button>
-      <h3 className="text-xl font-black text-[#151D48] dark:text-white mb-6 uppercase tracking-tighter">{titulo}</h3>
+      <h3 className="text-base font-bold text-gray-800 mb-5">{titulo}</h3>
       {children}
     </div>
   </div>
@@ -36,15 +34,8 @@ const Modal = ({ titulo, onClose, children }) => (
 
 const InputField = ({ label, type = "text", required = false, ...props }) => (
   <div className="text-left">
-    <label className="text-[10px] font-black text-gray-500 dark:text-slate-400 mb-1 block uppercase ml-1">
-      {label} {required && "*"}
-    </label>
-    <input
-      type={type}
-      className="w-full p-4 bg-gray-100 dark:bg-[#0F172A] rounded-2xl border border-gray-200 dark:border-transparent focus:ring-2 focus:ring-[#E67E22] outline-none font-medium text-[#151D48] dark:text-white placeholder-gray-400 dark:placeholder-slate-500 transition-all"
-      required={required}
-      {...props}
-    />
+    <label className="text-[10px] font-black text-gray-400 mb-1 block uppercase ml-1">{label} {required && "*"}</label>
+    <input type={type} className={inputClass} required={required} {...props} />
   </div>
 );
 
@@ -117,78 +108,66 @@ const Usuarios = () => {
   );
 
   return (
-    <div className="p-8 bg-gray-100 dark:bg-[#0F172A] min-h-screen transition-colors duration-200">
-      <header className="flex justify-between items-center mb-10">
+    <div className="p-8 bg-gray-50 min-h-screen">
+      <header className="flex justify-between items-center mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[#151D48] dark:text-white tracking-tighter">Usuários</h2>
-          <p className="text-gray-500 dark:text-slate-400 font-medium">Gerencie os acessos ao sistema</p>
+          <h2 className="text-2xl font-black text-gray-900 tracking-tight">Usuários</h2>
+          <p className="text-gray-400 text-sm mt-0.5">Gerencie os acessos ao sistema</p>
         </div>
         <button
-          onClick={() => {
-            setUsuarioEditando(null);
-            setFormUsuario({ nome: "", login: "", senha: "", perfil: "USUARIO" });
-            setShowModal(true);
-          }}
-          className="bg-[#E67E22] text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-[#d35400] transition-all"
+          onClick={() => { setUsuarioEditando(null); setFormUsuario({ nome: "", login: "", senha: "", perfil: "USUARIO" }); setShowModal(true); }}
+          className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-colors shadow-md shadow-orange-100 text-sm"
         >
-          <UserPlus size={20} /> Novo Usuário
+          <UserPlus size={18} /> Novo Usuário
         </button>
       </header>
 
-      <div className="flex gap-4 mb-8">
+      <div className="flex gap-3 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={20} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input
             type="text"
             placeholder="Buscar por nome ou login..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full p-4 pl-12 bg-white dark:bg-[#1E293B] rounded-full shadow-sm border border-gray-200 dark:border-slate-700 focus:ring-2 focus:ring-[#E67E22] outline-none text-[#151D48] dark:text-white placeholder-gray-400 dark:placeholder-slate-500 transition-all"
+            className="w-full py-3 pl-11 pr-4 bg-white rounded-2xl border border-gray-200 shadow-sm focus:ring-2 focus:ring-orange-400 outline-none text-sm text-gray-700 placeholder-gray-400 transition-all"
           />
         </div>
-        <button
-          onClick={carregar}
-          className="p-4 bg-white dark:bg-[#1E293B] rounded-full shadow-sm border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-        >
-          <RefreshCw size={20} className="text-gray-400 dark:text-slate-400" />
+        <button onClick={carregar} className="p-3 bg-white rounded-2xl border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors">
+          <RefreshCw size={18} className="text-gray-400" />
         </button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {loading ? (
-          <p className="text-center text-gray-400 dark:text-slate-500 py-10 font-bold">Carregando...</p>
+          <p className="text-center text-gray-400 py-10 font-semibold animate-pulse">Carregando...</p>
         ) : usuariosFiltrados.map((u) => (
-          <div
-            key={u.id}
-            className="flex items-center justify-between bg-white dark:bg-[#1E293B] p-6 rounded-[32px] shadow-sm border border-gray-200 dark:border-slate-800 transition-all group"
-          >
+          <div key={u.id} className="flex items-center justify-between bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all group">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-[#0F172A] flex items-center justify-center font-black text-[#151D48] dark:text-white text-lg">
+              <div className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center font-black text-gray-600 text-base">
                 {u.nome?.charAt(0).toUpperCase()}
               </div>
               <div>
-                <p className="font-bold text-[#151D48] dark:text-white text-lg">{u.nome}</p>
-                <p className="text-[10px] text-gray-400 dark:text-slate-500 font-black uppercase tracking-wider">@{u.login}</p>
+                <p className="font-bold text-gray-800 text-sm">{u.nome}</p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">@{u.login}</p>
               </div>
             </div>
+
             <PerfilBadge perfil={u.perfil} />
+
             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
-                onClick={() => {
-                  setUsuarioEditando(u);
-                  setFormUsuario({ ...u, senha: "" });
-                  setShowModal(true);
-                }}
-                className="p-2 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+                onClick={() => { setUsuarioEditando(u); setFormUsuario({ ...u, senha: "" }); setShowModal(true); }}
+                className="p-2 rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors"
               >
-                <Pencil size={16} />
+                <Pencil size={15} />
               </button>
               {u.id !== meUser?.id && (
                 <button
                   onClick={() => setConfirmacao({ tipo: "excluir", usuario: u })}
-                  className="p-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                  className="p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={15} />
                 </button>
               )}
             </div>
@@ -198,32 +177,16 @@ const Usuarios = () => {
 
       {showModal && (
         <Modal titulo={usuarioEditando ? "Editar Usuário" : "Novo Usuário"} onClose={() => setShowModal(false)}>
-          <form onSubmit={handleSalvar} className="space-y-4">
-            <InputField
-              label="Nome"
-              value={formUsuario.nome}
-              onChange={(e) => setFormUsuario(p => ({ ...p, nome: e.target.value }))}
-              required
-            />
-            <InputField
-              label="Login"
-              value={formUsuario.login}
-              onChange={(e) => setFormUsuario(p => ({ ...p, login: e.target.value }))}
-              required
-            />
+          <form onSubmit={handleSalvar} className="space-y-3">
+            <InputField label="Nome" value={formUsuario.nome} onChange={(e) => setFormUsuario(p => ({ ...p, nome: e.target.value }))} required />
+            <InputField label="Login" value={formUsuario.login} onChange={(e) => setFormUsuario(p => ({ ...p, login: e.target.value }))} required />
             {!usuarioEditando && (
-              <InputField
-                label="Senha"
-                type="password"
-                value={formUsuario.senha}
-                onChange={(e) => setFormUsuario(p => ({ ...p, senha: e.target.value }))}
-                required
-              />
+              <InputField label="Senha" type="password" value={formUsuario.senha} onChange={(e) => setFormUsuario(p => ({ ...p, senha: e.target.value }))} required />
             )}
             <div>
-              <label className="text-[10px] font-black text-gray-500 dark:text-slate-400 mb-1 block uppercase ml-1">Perfil</label>
+              <label className="text-[10px] font-black text-gray-400 mb-1 block uppercase ml-1">Perfil</label>
               <select
-                className="w-full p-4 bg-gray-100 dark:bg-[#0F172A] rounded-2xl border border-gray-200 dark:border-transparent text-[#151D48] dark:text-white font-medium outline-none focus:ring-2 focus:ring-[#E67E22]"
+                className={inputClass}
                 value={formUsuario.perfil}
                 onChange={(e) => setFormUsuario(p => ({ ...p, perfil: e.target.value }))}
               >
@@ -233,11 +196,7 @@ const Usuarios = () => {
               </select>
             </div>
             {erro && <p className="text-xs text-red-500 font-bold">❌ {erro}</p>}
-            <button
-              type="submit"
-              disabled={salvando}
-              className="w-full p-4 bg-[#E67E22] hover:bg-[#d35400] text-white font-black rounded-2xl uppercase text-xs transition-colors disabled:opacity-60"
-            >
+            <button type="submit" disabled={salvando} className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl text-sm disabled:opacity-50 transition-colors mt-2">
               {salvando ? "Salvando..." : "Confirmar"}
             </button>
           </form>
@@ -245,30 +204,20 @@ const Usuarios = () => {
       )}
 
       {confirmacao && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-[#1E293B] rounded-[32px] w-full max-w-sm shadow-2xl p-8 border border-gray-200 dark:border-slate-700/50">
-            <h3 className="text-xl font-black text-[#151D48] dark:text-white mb-2 uppercase tracking-tighter">Excluir Usuário</h3>
-            <p className="text-gray-500 dark:text-slate-400 text-sm mb-6">
-              Tem certeza que deseja excluir <span className="font-bold text-[#151D48] dark:text-white">{confirmacao.usuario.nome}</span>? Esta ação não pode ser desfeita.
-            </p>
-            {erro && <p className="text-xs text-red-500 font-bold mb-4">❌ {erro}</p>}
-            <div className="flex gap-3">
-              <button
-                onClick={() => setConfirmacao(null)}
-                className="flex-1 p-4 rounded-2xl border border-gray-200 dark:border-slate-700 text-gray-500 dark:text-slate-400 font-bold text-xs uppercase hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleExcluir}
-                disabled={salvando}
-                className="flex-1 p-4 bg-red-500 hover:bg-red-600 text-white font-black rounded-2xl uppercase text-xs transition-colors disabled:opacity-60"
-              >
-                {salvando ? "Excluindo..." : "Excluir"}
-              </button>
-            </div>
+        <Modal titulo="Confirmar Exclusão" onClose={() => setConfirmacao(null)}>
+          <p className="text-sm text-gray-600 mb-5">
+            Deseja excluir o usuário <span className="font-bold text-gray-800">{confirmacao.usuario.nome}</span>? Esta ação não pode ser desfeita.
+          </p>
+          {erro && <p className="text-xs text-red-500 font-bold mb-3">❌ {erro}</p>}
+          <div className="flex gap-3">
+            <button onClick={() => setConfirmacao(null)} className="flex-1 py-3 text-gray-400 font-semibold hover:bg-gray-50 rounded-xl text-sm transition-colors">
+              Cancelar
+            </button>
+            <button onClick={handleExcluir} disabled={salvando} className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl text-sm disabled:opacity-50 transition-colors">
+              {salvando ? "Excluindo..." : "Excluir"}
+            </button>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

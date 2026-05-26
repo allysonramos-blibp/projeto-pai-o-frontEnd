@@ -81,11 +81,11 @@ const Estoque = () => {
       <header className="flex justify-between items-center mb-8">
         <div>
           <h2 className="text-2xl font-black text-gray-900 tracking-tight">Estoque</h2>
-          <p className="text-gray-400 text-sm mt-0.5">Controle de produtos e quantidades</p>
+          <p className="text-gray-500 text-sm mt-0.5">Controle de produtos e quantidades em tempo real</p>
         </div>
         <button
           onClick={() => { setItemParaEditar(null); setShowModal(true); }}
-          className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-colors shadow-md shadow-orange-100 text-sm"
+          className="bg-orange-600 hover:bg-orange-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-colors shadow-sm text-sm"
         >
           <Plus size={18} /> Novo Registro
         </button>
@@ -95,19 +95,21 @@ const Estoque = () => {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
         <input
           type="text"
-          placeholder="Buscar produto..."
+          placeholder="Buscar produto por nome..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full py-3 pl-11 pr-4 bg-white rounded-2xl border border-gray-200 shadow-sm focus:ring-2 focus:ring-orange-400 outline-none text-gray-700 placeholder-gray-400 text-sm font-medium transition-all"
+          className="w-full py-3 pl-11 pr-4 bg-white rounded-2xl border border-gray-200 shadow-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none text-gray-700 placeholder-gray-400 text-sm font-medium transition-all"
         />
       </div>
 
       <div className="space-y-3">
         {loading ? (
-          <p className="text-center text-gray-400 py-10 font-semibold animate-pulse">Carregando...</p>
+          <div className="text-center py-10">
+             <p className="text-gray-500 animate-pulse font-medium">Atualizando dados...</p>
+          </div>
         ) : itensFiltrados.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-gray-200">
-            <p className="text-gray-400 font-semibold">Nenhum item encontrado no estoque.</p>
+            <p className="text-gray-400 font-medium">Nenhum item encontrado no estoque.</p>
           </div>
         ) : (
           itensFiltrados.map((item) => (

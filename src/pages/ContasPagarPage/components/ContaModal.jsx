@@ -11,6 +11,8 @@ const EMPTY_FORM = {
   fornecedorId: '',
 };
 
+const inputClass = "w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-400 text-sm text-gray-700 transition-all";
+
 const ContaModal = ({ conta, onClose, onSuccess }) => {
   const { user } = useAuth();
   const [form, setForm] = useState(conta ? {
@@ -58,7 +60,7 @@ const ContaModal = ({ conta, onClose, onSuccess }) => {
       }
       await onSuccess();
       onClose();
-    } catch (err) {
+    } catch {
       alert(`Erro ao ${isEditing ? 'editar' : 'cadastrar'} conta.`);
     } finally {
       setLoading(false);
@@ -67,92 +69,48 @@ const ContaModal = ({ conta, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-[var(--bg-card)] rounded-[32px] w-full max-w-md p-8 shadow-2xl border border-[var(--borda)]">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-[var(--texto-titulo)]">
+      <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl border border-gray-100">
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-base font-bold text-gray-800">
             {isEditing ? 'Editar Conta' : 'Nova Conta a Pagar'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-red-500">
-            <X size={24} />
+          <button onClick={onClose} className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors">
+            <X size={18} />
           </button>
         </div>
 
-        <div className="space-y-3 mb-8">
+        <div className="space-y-3 mb-5">
           <div className="relative">
-            <FileText size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              name="descricao"
-              placeholder="Descrição *"
-              value={form.descricao}
-              onChange={handleChange}
-              className="w-full pl-10 pr-4 py-3 bg-[var(--bg-principal)] rounded-2xl outline-none border border-[var(--borda)] focus:ring-2 focus:ring-[#E67E22] text-sm text-[var(--texto-titulo)]"
-            />
+            <FileText size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input name="descricao" placeholder="Descrição *" value={form.descricao} onChange={handleChange} className={inputClass} />
           </div>
-
           <div className="relative">
-            <DollarSign size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              name="valor"
-              type="number"
-              step="0.01"
-              placeholder="Valor *"
-              value={form.valor}
-              onChange={handleChange}
-              className="w-full pl-10 pr-4 py-3 bg-[var(--bg-principal)] rounded-2xl outline-none border border-[var(--borda)] focus:ring-2 focus:ring-[#E67E22] text-sm text-[var(--texto-titulo)]"
-            />
+            <DollarSign size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input name="valor" type="number" step="0.01" placeholder="Valor *" value={form.valor} onChange={handleChange} className={inputClass} />
           </div>
-
           <div className="relative">
-            <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              name="dataVencimento"
-              type="date"
-              value={form.dataVencimento}
-              onChange={handleChange}
-              className="w-full pl-10 pr-4 py-3 bg-[var(--bg-principal)] rounded-2xl outline-none border border-[var(--borda)] focus:ring-2 focus:ring-[#E67E22] text-sm text-[var(--texto-titulo)]"
-            />
+            <Calendar size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input name="dataVencimento" type="date" value={form.dataVencimento} onChange={handleChange} className={inputClass} />
           </div>
-
           <div className="relative">
-            <Tag size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              name="categoria"
-              placeholder="Categoria *"
-              value={form.categoria}
-              onChange={handleChange}
-              className="w-full pl-10 pr-4 py-3 bg-[var(--bg-principal)] rounded-2xl outline-none border border-[var(--borda)] focus:ring-2 focus:ring-[#E67E22] text-sm text-[var(--texto-titulo)]"
-            />
+            <Tag size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input name="categoria" placeholder="Categoria *" value={form.categoria} onChange={handleChange} className={inputClass} />
           </div>
-
           <div className="relative">
-            <Building2 size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            <select
-              name="fornecedorId"
-              value={form.fornecedorId}
-              onChange={handleChange}
-              className="w-full pl-10 pr-4 py-3 bg-[var(--bg-principal)] rounded-2xl outline-none border border-[var(--borda)] focus:ring-2 focus:ring-[#E67E22] text-sm text-[var(--texto-titulo)] appearance-none"
-            >
+            <Building2 size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <select name="fornecedorId" value={form.fornecedorId} onChange={handleChange} className={`${inputClass} appearance-none`}>
               <option value="">Selecionar Fornecedor *</option>
-              {fornecedores.map(f => (
-                <option key={f.id} value={f.id}>{f.nome}</option>
-              ))}
+              {fornecedores.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
             </select>
           </div>
         </div>
 
         <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-4 text-gray-400 font-bold rounded-2xl hover:bg-[var(--bg-principal)]"
-          >
-            CANCELAR
+          <button onClick={onClose} className="flex-1 py-3 text-gray-400 font-semibold hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-colors text-sm">
+            Cancelar
           </button>
-          <button
-            onClick={handleSalvar}
-            disabled={loading}
-            className="flex-1 py-4 bg-[#151D48] text-white rounded-2xl font-bold disabled:opacity-50"
-          >
-            {loading ? 'SALVANDO...' : isEditing ? 'SALVAR' : 'CADASTRAR'}
+          <button onClick={handleSalvar} disabled={loading} className="flex-1 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold text-sm disabled:opacity-50 transition-colors">
+            {loading ? 'Salvando...' : isEditing ? 'Salvar' : 'Cadastrar'}
           </button>
         </div>
       </div>

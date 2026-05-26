@@ -7,22 +7,14 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  
-  const [tema, setTema] = useState(localStorage.getItem('app-theme') || 'orange');
 
-  
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', tema);
-  }, [tema]);
-
-  useEffect(() => { 
     const initAuth = () => {
       try {
         const token = localStorage.getItem('token');
         const storageUser = localStorage.getItem('usuario');
 
         if (!token || !storageUser || storageUser === "undefined") {
-          // Apenas remove os dados de auth, preservando o tema
           localStorage.removeItem('token');
           localStorage.removeItem('usuario');
           setUser(null);
@@ -62,7 +54,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
     setUser(null);
@@ -70,7 +61,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, tema, setTema }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );
